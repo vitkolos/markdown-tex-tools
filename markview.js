@@ -1,5 +1,5 @@
 const https = require('https');
-const marktex = require('./marktex')
+const marktex = require('./marktex');
 
 function getView(originalPath, pathOffset, res) {
     loadGithubData(originalPath, pathOffset, res, pagify);
@@ -47,11 +47,11 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
                         const command = originalPath[pathOffset - 1];
 
                         if (command == 'cards-json') {
-                            res.writeHead(200, { 'Content-Type': 'application/json' });
+                            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
                         } else if (command == 'anki' || command == 'quizlet') {
-                            res.writeHead(200, { 'Content-Type': 'text/plain' });
+                            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
                         } else {
-                            res.writeHead(200, { 'Content-Type': 'text/html' });
+                            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
                         }
 
                         const content = Buffer.concat(data).toString();
@@ -71,39 +71,8 @@ function pagify(markdown, command) {
     const options = { throwOnError: false };
     const titleMatch = markdown.match(/^# (.*)/);
     const title = (titleMatch && titleMatch.length == 2) ? titleMatch[1] : 'Markdown';
-    return `<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${title}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css" integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
-    <style>
-    body {
-        font-family: sans-serif;
-        font-size: 1.1em;
-        line-height: 1.5;
-        max-width: 700px;
-        margin: 5rem auto;
-        padding: 0 1rem;
-    }
-    li {
-        margin: 0.5rem 0;
-    }
-    table {
-        border-collapse: collapse;
-    }
-    td {
-        border: 1px solid #ccc;
-        padding: 0.25rem 0.5rem;
-    }
-    </style>
-</head>
-<body>
-${marktex.process(markdown, options)}
-</body>
-</html>
-`;
+    const body = marktex.process(markdown, options);
+    return fillHtmlTemplate(body, title);
 }
 
 function cardify(markdown, command) {
@@ -111,18 +80,22 @@ function cardify(markdown, command) {
     let description = '';
     let currentHeading = '';
     let currentCard;
-    let allCards = [];
+    const allCards = [];
+    const categories = [];
     const indentationMatch = markdown.match(/\n([ \t]+)/);
     const indentation = (indentationMatch && indentationMatch.length == 2) ? indentationMatch[1] : '\t';
+    const ulBullet = '[-*+] ';
+    const ulRegExp = new RegExp('^' + ulBullet);
 
     const lines = markdown.split('\n').forEach(line => {
         if (line != '') {
-            const ll = getListLevel(line, indentation);
+            const ll = getListLevel(line, indentation, ulBullet);
 
             if (line.substring(0, 2) == '# ') {
                 title = line.substring(2);
             } else if (line.substring(0, 3) == '## ') {
                 currentHeading = line.substring(3);
+                categories.push(currentHeading);
             } else if (ll == 0) {
                 if (currentCard && currentCard.descriptionLines.length) {
                     allCards.push(currentCard);
@@ -144,18 +117,55 @@ function cardify(markdown, command) {
     });
 
     if (command == 'cards-json') {
-        return JSON.stringify(allCards);
-    } else if (command == 'anki') {
+        return JSON.stringify({ title, description, categories, cards: allCards });
+    } else if (command == 'anki' || command == 'quizlet') {
+        const titleSep = (command == 'anki') ? '; ' : ';';
+        const lineSep = (command == 'anki') ? '<br>' : '\n';
+        const cardSep = (command == 'anki') ? '\n' : '\n\n';
 
-    } else if (command == 'quizlet') {
-
+        return allCards.map(card => {
+            if (card.descriptionLines.length == 1 && ulRegExp.test(card.descriptionLines[0])) {
+                return card.title + titleSep + card.descriptionLines[0].substring(2);
+            } else {
+                return card.title + titleSep + card.descriptionLines.join(lineSep);
+            }
+        }).join(cardSep);
     } else {
+        const options = { throwOnError: false };
+        let body = '<div id="stats"></div><div>'
+            + '<button type="button" onclick="startRun(-1);">začít nenavštívené</button>'
+            + '<button type="button" onclick="startRun(0);">začít <=0</button>'
+            + '<button type="button" onclick="startRun(1);">začít <=1</button>'
+            + '<button type="button" onclick="startRun(2);">začít <=2</button>'
+            + '<button type="button" onclick="startRun(3);">začít <=3 (vše)</button>'
+        +'</div>';
 
+        allCards.forEach(card => {
+            const desc = (card.descriptionLines.length == 1 && ulRegExp.test(card.descriptionLines[0]))
+                ? card.descriptionLines[0].substring(2) : card.descriptionLines.join('\n');
+            body += `<div id="${card.id}" class="card"><div class="title">${card.title}</div>`
+                + `<div class="description">${marktex.process(desc, options)}</div></div>`;
+        });
+
+        body += '<div class="controls">'
+            + '<button type="button" onclick="flip();">flip</button>'
+            + '<button type="button" onclick="previous();">previous</button>'
+            + '<button type="button" onclick="next();">next</button>'
+            + '<button type="button" onclick="mark(0);">0</button>'
+            + '<button type="button" onclick="mark(1);">1</button>'
+            + '<button type="button" onclick="mark(2);">2</button>'
+            + '<button type="button" onclick="mark(3);">3</button>'
+            + '<span id="progress"></span>'
+            + '</div>';
+        body += '<script>cardIds = [\'' + allCards.map(card => card.id).join('\', \'') + '\'];</script>';
+        body += '<script src="/node/static/cards.js"></script>';
+        const head = '<link rel="stylesheet" href="/node/static/cards.css">';
+        return fillHtmlTemplate(body, title, head);
     }
 }
 
-function getListLevel(line, indentation) {
-    const gllMatch = line.match(new RegExp('^((' + indentation + ')*)[-*+] '));
+function getListLevel(line, indentation, ulBullet) {
+    const gllMatch = line.match(new RegExp('^((' + indentation + ')*)' + ulBullet));
 
     if (gllMatch == null || indentation == '') {
         return -1;
@@ -184,6 +194,43 @@ function replaceAll(str, arr1, arr2) {
     });
 }
 
+function fillHtmlTemplate(body, title, head = '') {
+    return `<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${title}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css" integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
+    <style>
+    body {
+        font-family: sans-serif;
+        font-size: 1.1em;
+        line-height: 1.5;
+        max-width: 700px;
+        margin: 5rem auto;
+        padding: 0 1rem;
+    }
+    li {
+        margin: 0.5rem 0;
+    }
+    table {
+        border-collapse: collapse;
+    }
+    td {
+        border: 1px solid #ccc;
+        padding: 0.25rem 0.5rem;
+    }
+    </style>
+    ${head}
+</head>
+<body>
+${body}
+</body>
+</html>
+`;
+}
+
 function notFound(res, err = 'page not found') {
     res.writeHead(404);
     res.end(err);
@@ -191,4 +238,4 @@ function notFound(res, err = 'page not found') {
 
 module.exports = {
     getView, getCards
-}
+};

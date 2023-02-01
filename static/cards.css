@@ -1,0 +1,12 @@
+.card,
+.description {
+    display: none;
+}
+
+.show {
+    display: block;
+}
+
+.flip .description {
+    display: block;
+}

@@ -59,4 +59,4 @@ function process(markdown, options = {}) {
 
 module.exports = {
     process
-}
+};
