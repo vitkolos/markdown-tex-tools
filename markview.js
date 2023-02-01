@@ -87,7 +87,7 @@ function cardify(markdown, command) {
     const ulBullet = '[-*+] ';
     const ulRegExp = new RegExp('^' + ulBullet);
 
-    const lines = markdown.split('\n').forEach(line => {
+    markdown.split('\n').forEach(line => {
         if (line != '') {
             const ll = getListLevel(line, indentation, ulBullet);
 
@@ -132,29 +132,30 @@ function cardify(markdown, command) {
         }).join(cardSep);
     } else {
         const options = { throwOnError: false };
-        let body = '<div id="stats"></div><div>'
+        let body = '<div id="stats" class="stats"></div><div class="top">'
             + '<button type="button" onclick="startRun(-1);">začít nenavštívené</button>'
             + '<button type="button" onclick="startRun(0);">začít <=0</button>'
             + '<button type="button" onclick="startRun(1);">začít <=1</button>'
             + '<button type="button" onclick="startRun(2);">začít <=2</button>'
             + '<button type="button" onclick="startRun(3);">začít <=3 (vše)</button>'
+            + '<button type="button" onclick="resetPrompt();">reset</button>'
         +'</div>';
 
         allCards.forEach(card => {
             const desc = (card.descriptionLines.length == 1 && ulRegExp.test(card.descriptionLines[0]))
                 ? card.descriptionLines[0].substring(2) : card.descriptionLines.join('\n');
-            body += `<div id="${card.id}" class="card"><div class="title">${card.title}</div>`
+            body += `<div id="${card.id}" class="card"><div class="title">${marktex.process(card.title, options)}</div>`
                 + `<div class="description">${marktex.process(desc, options)}</div></div>`;
         });
 
-        body += '<div class="controls">'
-            + '<button type="button" onclick="flip();">flip</button>'
-            + '<button type="button" onclick="previous();">previous</button>'
-            + '<button type="button" onclick="next();">next</button>'
-            + '<button type="button" onclick="mark(0);">0</button>'
-            + '<button type="button" onclick="mark(1);">1</button>'
-            + '<button type="button" onclick="mark(2);">2</button>'
-            + '<button type="button" onclick="mark(3);">3</button>'
+        body += '<div id="controls" class="controls">'
+            + '<button type="button" onclick="flip();">rozbalit</button>'
+            + '<button type="button" onclick="previous();">předchozí</button>'
+            + '<button type="button" onclick="next();">další</button>'
+            + '<button type="button" onclick="mark(0);">0 neumím</button>'
+            + '<button type="button" onclick="mark(1);">1 umím málo</button>'
+            + '<button type="button" onclick="mark(2);">2 umím středně</button>'
+            + '<button type="button" onclick="mark(3);">3 umím výborně</button>'
             + '<span id="progress"></span>'
             + '</div>';
         body += '<script>cardIds = [\'' + allCards.map(card => card.id).join('\', \'') + '\'];</script>';
@@ -174,9 +175,13 @@ function getListLevel(line, indentation, ulBullet) {
     }
 }
 
-function generateId(string, cards) {
+function slugify(string) {
     string = replaceAll(string.toLowerCase(), 'říšžťčýůňúěďáéóě', 'risztcyunuedaeoe');
-    const slug = string.replace(/\W/g, ' ').trim().replace(/\s+/g, '-');
+    return string.replace(/\W/g, ' ').trim().replace(/\s+/g, '-');
+}
+
+function generateId(string, cards) {
+    const slug = slugify(string);
     let id = slug.substring(0, 20) + '~' + slug.slice(-9);
 
     while (cards.some(card => card.id == id)) {

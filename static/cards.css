@@ -1,12 +1,10 @@
 .card,
-.description {
+.description,
+.controls {
     display: none;
 }
 
-.show {
-    display: block;
-}
-
+.show,
 .flip .description {
     display: block;
 }
