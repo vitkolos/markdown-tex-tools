@@ -11,6 +11,20 @@ h1 {
     line-height: 1.2;
 }
 
+button {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    padding: 0.2rem 0.4rem;
+    margin: 0.25rem;
+}
+
+[onclick] {
+    cursor: pointer;
+}
+
+/* show/hide */
+
 .card,
 .description,
 .controls,
@@ -39,6 +53,8 @@ h1 {
 .controls.nocard .progress {
     opacity: 0;
 }
+
+/* header */
 
 .stats {
     margin: 1rem 0;
@@ -140,15 +156,18 @@ h1 {
     content: 'další možnosti';
 }
 
-button {
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-    padding: 0.2rem 0.4rem;
-    margin: 0.25rem;
+.htbutton {
+    margin-top: 1rem;
 }
 
-.card, .welldone {
+.htbutton button {
+    margin-left: 1rem;
+}
+
+/* card */
+
+.card,
+.welldone {
     border: 2px solid #aaa;
     border-radius: 10px;
 }
@@ -164,7 +183,8 @@ button {
     display: none;
 }
 
-.card .title, .welldone {
+.card .title,
+.welldone {
     padding: 0.5rem 1rem;
 }
 
@@ -185,6 +205,12 @@ button {
     margin: 0;
     padding-left: 25px;
 }
+
+.flipper {
+    height: 200px;
+}
+
+/* controls */
 
 .controls {
     position: fixed;
@@ -214,14 +240,9 @@ button {
     pointer-events: none;
 }
 
-.htbutton {
-    margin-top: 1rem;
-}
-
-.htbutton button {
-    margin-left: 1rem;
-}
-
-.flipper {
-    height: 200px;
+.controls[data-level='1'] .cbottom button:nth-child(1),
+.controls[data-level='2'] .cbottom button:nth-child(2),
+.controls[data-level='3'] .cbottom button:nth-child(3),
+.controls[data-level='4'] .cbottom button:nth-child(4) {
+    text-decoration: underline;
 }

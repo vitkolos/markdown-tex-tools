@@ -132,40 +132,64 @@ function cardify(markdown, command) {
         }).join(cardSep);
     } else {
         const options = { throwOnError: false };
-        let body = '<h1>' + title + '</h1><div class="htbutton">' + title
-            + '<button type="button" onclick="hideTop(false);">zobrazit záhlaví</button></div>'
-            + '<div class="top"><div class="learn">'
-            + '<button type="button" onclick="startRun(-1);">nenavštívené</button>'
-            + '<button type="button" onclick="startRun(1);">≤ 1</button>'
-            + '<button type="button" onclick="startRun(2);">≤ 2</button>'
-            + '<button type="button" onclick="startRun(3);">≤ 3</button>'
-            + '<button type="button" onclick="startRun(4);">všechny karty</button>'
-            + '</div><div class="options"><button type="button" onclick="resetPrompt();">reset</button>'
-            + '<button type="button" onclick="exportData();">export</button>'
-            + '<button type="button" onclick="importData();">import</button>'
-            + '<button type="button" onclick="hideTop(true);">skrýt záhlaví</button>'
-            + '</div></div><code id="exporthere"></code><div id="stats" class="stats"></div>';
+        let body = `
+            <h1>${title}</h1>
+            <div class="htbutton">
+                <span>${title}</span><button type="button" onclick="hideTop(false);">zobrazit záhlaví</button>
+            </div>
+            <div class="top">
+                <div class="learn">
+                    <button type="button" onclick="startRun(-1);">nové</button>
+                    <button type="button" onclick="startRun(1);">≤ 1</button>
+                    <button type="button" onclick="startRun(2);">≤ 2</button>
+                    <button type="button" onclick="startRun(3);">≤ 3</button>
+                    <button type="button" onclick="startRun(4);">všechny karty</button>
+                </div>
+                <div class="options">
+                    <button type="button" onclick="resetPrompt();">reset</button>
+                    <button type="button" onclick="exportData();">export</button>
+                    <button type="button" onclick="importData();">import</button>
+                    <button type="button" onclick="hideTop(true);">skrýt záhlaví</button>
+                </div>
+            </div>
+            <code id="exporthere"></code>
+            <div id="stats" class="stats"></div>
+        `;
 
         allCards.forEach(card => {
             const desc = (card.descriptionLines.length == 1 && ulRegExp.test(card.descriptionLines[0]))
                 ? card.descriptionLines[0].substring(2) : card.descriptionLines.join('\n');
-            body += `<div id="${card.id}" class="card"><div class="title" onclick="flip();"><div class="category">${card.category}</div>${marktex.process(card.title, options)}</div>`
-                + `<div class="description">${marktex.process(desc, options)}</div></div>`;
+            body += `
+                <div id="${card.id}" class="card">
+                    <div class="title" onclick="flip();">
+                        <div class="category">${card.category}</div>
+                        ${marktex.process(card.title, options)}
+                    </div>
+                    <div class="description">${marktex.process(desc, options)}</div>
+                </div>
+            `;
         });
 
-        body += '<div id="welldone" class="welldone">Hurá, máš hotovo! 🎉</div><div class="flipper" onclick="flip();"></div>';
-        body += '<div id="controls" class="controls"><div class="ctop">'
-            + '<button type="button" class="flip" onclick="flip();">rozbalit</button>'
-            + '<button type="button" class="previous" onclick="previous();">předchozí</button>'
-            + '<button type="button" class="next" onclick="next();">další</button>'
-            + '<button id="progress" class="progress" tabindex="-1"></buttons></div><div class="cbottom">'
-            + '<button type="button" class="mark" onclick="mark(1);">1 neumím</button>'
-            + '<button type="button" class="mark" onclick="mark(2);">2 umím trochu</button>'
-            + '<button type="button" class="mark" onclick="mark(3);">3 umím středně</button>'
-            + '<button type="button" class="mark" onclick="mark(4);">4 umím výborně</button>'
-            + '</div></div>';
-        body += '<script>cardIds = [\'' + allCards.map(card => card.id).join('\', \'') + '\'];</script>';
-        body += '<script src="/node/static/cards.js"></script>';
+        body += `
+            <div id="welldone" class="welldone">Hurá, máš hotovo! 🎉</div>
+            <div class="flipper" onclick="flip();"></div>
+            <div id="controls" class="controls">
+                <div class="ctop">
+                    <button type="button" class="flip" onclick="flip();">rozbalit</button>
+                    <button type="button" class="previous" onclick="previous();">předchozí</button>
+                    <button type="button" class="next" onclick="next();">další</button>
+                    <button id="progress" class="progress" tabindex="-1"></buttons>
+                </div>
+                <div class="cbottom">
+                    <button type="button" class="mark" onclick="mark(1);">1 neumím</button>
+                    <button type="button" class="mark" onclick="mark(2);">2 umím trochu</button>
+                    <button type="button" class="mark" onclick="mark(3);">3 umím středně</button>
+                    <button type="button" class="mark" onclick="mark(4);">4 umím výborně</button>
+                </div>
+            </div>
+            <script>cardIds = ['${allCards.map(card => card.id).join('\', \'')}'];</script>
+            <script src="/node/static/cards.js"></script>
+        `;
         const head = '<link rel="stylesheet" href="/node/static/cards.css">';
         return fillHtmlTemplate(body, title + ': kartičky', head);
     }

@@ -6,17 +6,14 @@
 // lcPointer = current position in lastCards array (index of currentCard)
 // visitedCards = levels of visited cards (object … id: level)
 
-var currentCard, cardsToVisit, currentRun, lastCards, lcPointer, visitedCards;
+var currentCard, cardsToVisit,
+    currentRun, lastCards, lcPointer, visitedCards,
+    controlsElement, keysBlocked;
+
 const lsPrefix = 'cards_' + slugify(decodeURIComponent(location.pathname)) + '_';
 
 if (typeof cardIds !== 'undefined') {
     initialize();
-}
-
-function flip() {
-    if (currentCard) {
-        document.getElementById(currentCard).classList.toggle('flip');
-    }
 }
 
 function initialize() {
@@ -30,38 +27,49 @@ function initialize() {
     const tempVC = localStorage.getItem(lsPrefix + 'visitedCards');
     visitedCards = tempVC ? JSON.parse(tempVC) : {};
 
-    someCalls();
+    // helper element
+    controlsElement = document.getElementById('controls');
+    // this prevents accidental marking of multiple cards at once
+    keysBlocked = false;
+
+    someInitialCalls();
 
     document.addEventListener('keydown', event => {
         if (currentCard) {
             switch (event.code) {
                 case 'Space':
-                    if (event.target.type != 'button') {
-                        flip();
-                    }
-
-                    if (event.target == document.body) {
-                        event.preventDefault();
-                        return false;
+                    flip();
+                    event.preventDefault();
+                    return false;
+                case 'ArrowRight':
+                    next();
+                    break;
+                case 'ArrowLeft':
+                    previous();
+                    break;
+                case 'Digit1':
+                case 'Digit2':
+                case 'Digit3':
+                case 'Digit4':
+                    if (!keysBlocked) {
+                        keysBlocked = true;
+                        mark(+event.code.substring(5));
                     }
                     break;
-
-                case 'ArrowRight': next(); break;
-                case 'ArrowLeft': previous(); break;
-                case 'Digit1': mark(1); break;
-                case 'Digit2': mark(2); break;
-                case 'Digit3': mark(3); break;
-                case 'Digit4': mark(4); break;
             }
         } else if (currentRun !== undefined && event.code == 'ArrowLeft') {
             previous();
         }
     });
+
+    document.addEventListener('keyup', event => {
+        keysBlocked = false;
+    });
 }
 
-function someCalls() {
+function someInitialCalls() {
     if (currentRun !== undefined) {
-        localStorage.setItem(lsPrefix + 'lastRun', JSON.stringify(new Date()));
+        lsSet('lastRun');
         currentCard = lastCards[lcPointer];
     }
 
@@ -72,11 +80,30 @@ function someCalls() {
     cleanOldLS();
 }
 
+// localStorage stuff
+
 function saveCurrentState() {
-    localStorage.setItem(lsPrefix + 'currentRun', currentRun);
-    localStorage.setItem(lsPrefix + 'lcPointer', lcPointer);
-    localStorage.setItem(lsPrefix + 'lastCards', JSON.stringify(lastCards));
-    localStorage.setItem(lsPrefix + 'visitedCards', JSON.stringify(visitedCards));
+    lsSet('currentRun');
+    lsSet('lcPointer');
+    lsSet('lastCards');
+    lsSet('visitedCards');
+}
+
+function lsSet(name) {
+    switch (name) {
+        case 'currentRun':
+            localStorage.setItem(lsPrefix + 'currentRun', currentRun);
+            break;
+        case 'lcPointer':
+            localStorage.setItem(lsPrefix + 'lcPointer', lcPointer);
+            break;
+        case 'lastCards':
+            localStorage.setItem(lsPrefix + 'lastCards', JSON.stringify(lastCards));
+            break;
+        case 'visitedCards':
+            localStorage.setItem(lsPrefix + 'visitedCards', JSON.stringify(visitedCards));
+            break;
+    }
 }
 
 function cleanOldLS() {
@@ -110,6 +137,8 @@ function replaceAll(str, arr1, arr2) {
     });
 }
 
+// start or reset functions
+
 function resetPrompt() {
     if (confirm('Opravdu chceš začít od začátku?')) {
         reset();
@@ -119,9 +148,9 @@ function resetPrompt() {
 function reset() {
     clearState();
     currentRun = undefined;
-    localStorage.setItem(lsPrefix + 'currentRun', currentRun);
+    lsSet('currentRun');
     visitedCards = {};
-    localStorage.setItem(lsPrefix + 'visitedCards', JSON.stringify(visitedCards));
+    lsSet('visitedCards');
     cardsToVisit = [];
     updateStats();
     showOrHideControls();
@@ -131,21 +160,23 @@ function reset() {
 function clearState() {
     currentCard = undefined;
     lastCards = [];
-    localStorage.setItem(lsPrefix + 'lastCards', JSON.stringify(lastCards));
+    lsSet('lastCards');
     lcPointer = -1;
-    localStorage.setItem(lsPrefix + 'lcPointer', lcPointer);
+    lsSet('lcPointer');
 }
 
 function startRun(number) {
     clearState();
-    localStorage.setItem(lsPrefix + 'lastRun', JSON.stringify(new Date()));
+    lsSet('lastRun');
     currentRun = number;
-    localStorage.setItem(lsPrefix + 'currentRun', currentRun);
+    lsSet('currentRun');
     generateCardsToVisit();
     next();
     updateStats();
     showOrHideControls();
 }
+
+// card background functions
 
 function generateCardsToVisit() {
     cardsToVisit = cardIds.filter(id => !lastCards.includes(id)
@@ -155,9 +186,11 @@ function generateCardsToVisit() {
 function pickRandomCard() {
     let randomIndex = Math.floor(Math.random() * cardsToVisit.length);
     lastCards.push(cardsToVisit[randomIndex]);
-    localStorage.setItem(lsPrefix + 'lastCards', JSON.stringify(lastCards));
+    lsSet('lastCards');
     cardsToVisit.splice(randomIndex, 1);
 }
+
+// card controls
 
 function next() {
     if (!currentCard || currentCard in visitedCards) {
@@ -167,14 +200,14 @@ function next() {
             } else {
                 lcPointer++;
                 currentCard = undefined;
-                localStorage.setItem(lsPrefix + 'lcPointer', lcPointer);
+                lsSet('lcPointer');
                 showCurrentCard();
                 return;
             }
         }
 
         lcPointer++;
-        localStorage.setItem(lsPrefix + 'lcPointer', lcPointer);
+        lsSet('lcPointer');
         currentCard = lastCards[lcPointer];
         showCurrentCard();
     }
@@ -183,7 +216,7 @@ function next() {
 function previous() {
     if (lcPointer > 0) {
         lcPointer--;
-        localStorage.setItem(lsPrefix + 'lcPointer', lcPointer);
+        lsSet('lcPointer');
         currentCard = lastCards[lcPointer];
         showCurrentCard();
     }
@@ -191,10 +224,18 @@ function previous() {
 
 function mark(number) {
     visitedCards[currentCard] = number;
-    localStorage.setItem(lsPrefix + 'visitedCards', JSON.stringify(visitedCards));
+    lsSet('visitedCards');
     updateStats();
     next();
 }
+
+function flip() {
+    if (currentCard) {
+        document.getElementById(currentCard).classList.toggle('flip');
+    }
+}
+
+// data import/export
 
 function exportData() {
     document.getElementById('exporthere').textContent = document.getElementById('exporthere').textContent
@@ -207,10 +248,12 @@ function importData() {
     if (data != null) {
         const dataObj = JSON.parse(data);
         ({ currentRun, lastCards, lcPointer, visitedCards } = dataObj);
-        someCalls();
+        someInitialCalls();
         saveCurrentState();
     }
 }
+
+// visual stuff
 
 function hideAllCards() {
     Array.from(document.getElementsByClassName('card')).forEach(element => {
@@ -221,16 +264,20 @@ function hideAllCards() {
 
 function showCurrentCard() {
     hideAllCards();
+    controlsElement.removeAttribute('data-level');
 
     if (currentCard) {
         document.getElementById(currentCard).classList.add('show');
+
+        if (currentCard in visitedCards) {
+            controlsElement.setAttribute('data-level', visitedCards[currentCard]);
+        }
     }
 
-    document.getElementById('controls').classList.toggle('nocard', !currentCard);
+    controlsElement.classList.toggle('nocard', !currentCard);
+    controlsElement.classList.toggle('first', lcPointer === 0);
+    controlsElement.classList.toggle('last', (lcPointer === lastCards.length - 1 && !(currentCard in visitedCards)));
     document.getElementById('welldone').classList.toggle('show', !currentCard && currentRun !== undefined);
-    document.getElementById('controls').classList.toggle('first', lcPointer === 0);
-    document.getElementById('controls').classList.toggle('last', (lcPointer === lastCards.length - 1 && !(currentCard in visitedCards)));
-
     document.getElementById('progress').textContent = (lcPointer + 1)
         + '/' + (lastCards.length + cardsToVisit.length);
 }
@@ -258,11 +305,7 @@ function updateStats() {
 }
 
 function showOrHideControls() {
-    if (currentRun !== undefined) {
-        document.getElementById('controls').classList.add('show');
-    } else {
-        document.getElementById('controls').classList.remove('show');
-    }
+    controlsElement.classList.toggle('show', currentRun !== undefined);
 }
 
 function hideTop(hide) {
