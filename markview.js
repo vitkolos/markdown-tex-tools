@@ -187,7 +187,7 @@ function cardify(markdown, command) {
                     <button type="button" class="mark" onclick="mark(4);">4 umím výborně</button>
                 </div>
             </div>
-            <script>cardIds = ['${allCards.map(card => card.id).join('\', \'')}'];</script>
+            <script>var cardIds = ['${allCards.map(card => card.id).join('\', \'')}'];</script>
             <script src="/node/static/cards.js"></script>
         `;
         const head = '<link rel="stylesheet" href="/node/static/cards.css">';
