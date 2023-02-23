@@ -1,4 +1,5 @@
 const https = require('https');
+require('dotenv').config();
 const marktex = require('./marktex');
 
 function getView(originalPath, pathOffset, res) {
@@ -24,6 +25,7 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
                 let data = [];
 
                 if (res2.statusCode != 200) {
+                    showDirectoryStructure();
                     notFound(res, 'not found :(');
                 }
 
@@ -71,7 +73,7 @@ function pagify(markdown, command) {
     const options = { throwOnError: false };
     const titleMatch = markdown.match(/^# (.*)/);
     const title = (titleMatch && titleMatch.length == 2) ? titleMatch[1] : 'Markdown';
-    const body = marktex.process(markdown, options);
+    const body = marktex.processKatex(markdown, options);
     return fillHtmlTemplate(body, title);
 }
 
@@ -163,9 +165,9 @@ function cardify(markdown, command) {
                 <div id="${card.id}" class="card">
                     <div class="title" onclick="flip();">
                         <div class="category">${card.category}</div>
-                        ${marktex.process(card.title, options)}
+                        ${marktex.processKatex(card.title, options)}
                     </div>
-                    <div class="description">${marktex.process(desc, options)}</div>
+                    <div class="description">${marktex.processKatex(desc, options)}</div>
                 </div>
             `;
         });
@@ -264,6 +266,10 @@ ${body}
 </body>
 </html>
 `;
+}
+
+function showDirectoryStructure() {
+    // process.env.GH_TOKEN
 }
 
 function notFound(res, err = 'page not found') {

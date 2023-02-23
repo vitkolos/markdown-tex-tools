@@ -52,11 +52,11 @@ function blockKatex(options) {
     };
 }
 
-function process(markdown, options = {}) {
+function processKatex(markdown, options = {}) {
     marked.use(markedKatex(options));
     return marked.parse(markdown);
 }
 
 module.exports = {
-    process
+    processKatex
 };
