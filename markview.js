@@ -1,5 +1,5 @@
 const https = require('https');
-// require('dotenv').config();
+require('dotenv').config();
 const marktex = require('./marktex');
 
 function getView(originalPath, pathOffset, res) {
@@ -269,11 +269,10 @@ ${body}
 }
 
 function showDirectoryStructure(originalPath, pathOffset, res) {
-    // res.writeHead(200);
     const repository = originalPath[pathOffset];
     const branch = originalPath[pathOffset + 1];
     const pathInRepo = originalPath.slice(pathOffset + 2).join('/');
-    const apiUrl = 'https://api.github.com/repos/vitkolos/' + repository + '/contents/' + pathInRepo + '?ref=' + branch;
+    const apiUrl = 'https://vitkolos:' + process.env.GH_TOKEN + '@api.github.com/repos/vitkolos/' + repository + '/contents/' + pathInRepo + '?ref=' + branch;
 
     https.get(apiUrl, { headers: { 'User-Agent': 'vitkolos' } }, res2 => {
         let data = [];
@@ -290,8 +289,13 @@ function showDirectoryStructure(originalPath, pathOffset, res) {
         res2.on('end', () => {
             const content = Buffer.concat(data).toString();
             const items = JSON.parse(content);
+            let reversePath = originalPath.slice(pathOffset + 2);
+            reversePath.reverse();
+            reversePath.push(repository);
+            const title = decodeURIComponent(reversePath.join(' | '));
+            const doubleDotAddress = pathInRepo.length ? ('/' + originalPath.slice(0, -1).join('/') + '/') : '/';
             let body = '<ul>';
-            body += `<li><a href="${'/' + originalPath.slice(0, -1).join('/') + '/'}">..</a></li>`;
+            body += `<li><a href="${doubleDotAddress}">..</a></li>`;
 
             items.forEach(item => {
                 let currentPath = '/' + originalPath.slice(0, pathOffset + 2).join('/') + '/' + item.path + (item.type == 'dir' ? '/' : '');
@@ -300,7 +304,7 @@ function showDirectoryStructure(originalPath, pathOffset, res) {
 
             body += '</ul>';
             res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-            res.end(fillHtmlTemplate(body, pathInRepo));
+            res.end(fillHtmlTemplate(body, title));
         });
     }).on('error', err => {
         notFound(res, err.message);
