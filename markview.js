@@ -1,5 +1,5 @@
 const https = require('https');
-require('dotenv').config();
+// require('dotenv').config();
 const marktex = require('./marktex');
 
 function getView(originalPath, pathOffset, res) {
@@ -25,8 +25,8 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
                 let data = [];
 
                 if (res2.statusCode != 200) {
-                    showDirectoryStructure();
-                    notFound(res, 'not found :(');
+                    showDirectoryStructure(originalPath, pathOffset, res);
+                    return;
                 }
 
                 res2.on('data', chunk => {
@@ -268,8 +268,43 @@ ${body}
 `;
 }
 
-function showDirectoryStructure() {
-    // process.env.GH_TOKEN
+function showDirectoryStructure(originalPath, pathOffset, res) {
+    // res.writeHead(200);
+    const repository = originalPath[pathOffset];
+    const branch = originalPath[pathOffset + 1];
+    const pathInRepo = originalPath.slice(pathOffset + 2).join('/');
+    const apiUrl = 'https://api.github.com/repos/vitkolos/' + repository + '/contents/' + pathInRepo + '?ref=' + branch;
+
+    https.get(apiUrl, { headers: { 'User-Agent': 'vitkolos' } }, res2 => {
+        let data = [];
+
+        if (res2.statusCode != 200) {
+            notFound(res, 'not found :(');
+            return;
+        }
+
+        res2.on('data', chunk => {
+            data.push(chunk);
+        });
+
+        res2.on('end', () => {
+            const content = Buffer.concat(data).toString();
+            const items = JSON.parse(content);
+            let body = '<ul>';
+            body += `<li><a href="${'/' + originalPath.slice(0, -1).join('/') + '/'}">..</a></li>`;
+
+            items.forEach(item => {
+                let currentPath = '/' + originalPath.slice(0, pathOffset + 2).join('/') + '/' + item.path + (item.type == 'dir' ? '/' : '');
+                body += `<li><a href="${currentPath}">${item.name}</a></li>`;
+            });
+
+            body += '</ul>';
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end(fillHtmlTemplate(body, pathInRepo));
+        });
+    }).on('error', err => {
+        notFound(res, err.message);
+    });
 }
 
 function notFound(res, err = 'page not found') {
