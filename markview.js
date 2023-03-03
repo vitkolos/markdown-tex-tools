@@ -259,10 +259,13 @@ function fillHtmlTemplate(body, title, head = '') {
         padding: 0.25rem 0.5rem;
     }
     .doubledot {
-        padding-right: 3rem;
+        padding-right: 5rem;
     }
     a:hover {
         text-decoration: none;
+    }
+    .dir {
+        font-weight: bold;
     }
     </style>
     ${head}
@@ -301,11 +304,11 @@ function showDirectoryStructure(originalPath, pathOffset, res) {
             const title = decodeURIComponent(reversePath.join(' | '));
             const doubleDotAddress = pathInRepo.length ? ('/' + originalPath.slice(0, -1).join('/') + '/') : '/';
             let body = '<ul>';
-            body += `<li><a href="${doubleDotAddress}" class="doubledot">..</a></li>`;
+            body += `<li><a href="${doubleDotAddress}" class="doubledot dir">..</a></li>`;
 
             items.forEach(item => {
                 let currentPath = '/' + originalPath.slice(0, pathOffset + 2).join('/') + '/' + item.path + (item.type == 'dir' ? '/' : '');
-                body += `<li><a href="${currentPath}">${item.name}</a></li>`;
+                body += `<li><a href="${currentPath}" class="${item.type}">${item.name}</a></li>`;
             });
 
             body += '</ul>';
