@@ -79,7 +79,6 @@ button {
 
 .stats i::before,
 .current-run::before {
-    color: black;
     text-transform: uppercase;
     display: block;
     font-size: 0.65rem;
@@ -143,7 +142,6 @@ button {
 
 .learn::before,
 .options::before {
-    color: black;
     text-transform: uppercase;
     display: block;
     text-align: left;

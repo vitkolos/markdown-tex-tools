@@ -258,8 +258,8 @@ function fillHtmlTemplate(body, title, head = '') {
         border: 1px solid #ccc;
         padding: 0.25rem 0.5rem;
     }
-    .doubledot {
-        padding-right: 5rem;
+    li a {
+        display: block;
     }
     a:hover {
         text-decoration: none;
@@ -267,10 +267,15 @@ function fillHtmlTemplate(body, title, head = '') {
     .dir {
         font-weight: bold;
     }
+    .dark {
+        color: #ccc;
+        background-color: black;
+    }
     </style>
     ${head}
 </head>
 <body>
+<div style="position:absolute;top:0;left:0"><button onclick="document.body.classList.toggle('dark')">tmavý režim</button></div>
 ${body}
 </body>
 </html>
@@ -304,11 +309,13 @@ function showDirectoryStructure(originalPath, pathOffset, res) {
             const title = decodeURIComponent(reversePath.join(' | '));
             const doubleDotAddress = pathInRepo.length ? ('/' + originalPath.slice(0, -1).join('/') + '/') : '/';
             let body = '<ul>';
-            body += `<li><a href="${doubleDotAddress}" class="doubledot dir">..</a></li>`;
+            body += `<li><a href="${doubleDotAddress}" class="dir">..</a></li>`;
 
             items.forEach(item => {
-                let currentPath = '/' + originalPath.slice(0, pathOffset + 2).join('/') + '/' + item.path + (item.type == 'dir' ? '/' : '');
-                body += `<li><a href="${currentPath}" class="${item.type}">${item.name}</a></li>`;
+                if (!item.name.startsWith('.')) {
+                    let currentPath = '/' + originalPath.slice(0, pathOffset + 2).join('/') + '/' + item.path + (item.type == 'dir' ? '/' : '');
+                    body += `<li><a href="${currentPath}" class="${item.type}">${item.name}</a></li>`;
+                }
             });
 
             body += '</ul>';
