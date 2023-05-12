@@ -57,7 +57,7 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
                         }
 
                         const content = Buffer.concat(data).toString();
-                        res.end(processor(content, command));
+                        res.end(processor(content, command, { path: originalPath, offset: pathOffset }));
                     }
                 });
             }).on('error', err => {
@@ -69,15 +69,15 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
     }
 }
 
-function pagify(markdown, command) {
+function pagify(markdown, command, path) {
     const options = { throwOnError: false };
     const titleMatch = markdown.match(/^# (.*)/);
     const title = (titleMatch && titleMatch.length == 2) ? titleMatch[1] : 'Markdown';
     const body = marktex.processKatex(markdown, options);
-    return fillHtmlTemplate(body, title);
+    return fillHtmlTemplate(body, title, path);
 }
 
-function cardify(markdown, command) {
+function cardify(markdown, command, path) {
     let title = '';
     let description = '';
     let currentHeading = '';
@@ -193,7 +193,7 @@ function cardify(markdown, command) {
             <script src="/node/static/cards.js"></script>
         `;
         const head = '<link rel="stylesheet" href="/node/static/cards.css">';
-        return fillHtmlTemplate(body, title + ': kartičky', head);
+        return fillHtmlTemplate(body, title + ': kartičky', path, head);
     }
 }
 
@@ -231,7 +231,7 @@ function replaceAll(str, arr1, arr2) {
     });
 }
 
-function fillHtmlTemplate(body, title, head = '') {
+function fillHtmlTemplate(body, title, path, head = '') {
     return `<!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -271,11 +271,17 @@ function fillHtmlTemplate(body, title, head = '') {
         color: #ccc;
         background-color: black;
     }
+    .dark a {
+        color: lightyellow;
+    }
     </style>
     ${head}
 </head>
 <body>
-<div style="position:absolute;top:0;left:0"><button onclick="document.body.classList.toggle('dark')">tmavý režim</button></div>
+<small style="position:absolute;top:0.25rem;left:0.5rem"><a href=".">this dir</a> | `
+        + `<a href="/${path.path.slice(0, path.offset - 1).join('/') + '/view/' + path.path.slice(path.offset).join('/')}">view</a> | `
+        + `<a href="/${path.path.slice(0, path.offset - 1).join('/') + '/cards/' + path.path.slice(path.offset).join('/')}">cards</a> | `
+        + `<a href="javascript:(function(){document.body.classList.toggle('dark');})();">dark</a></small>
 ${body}
 </body>
 </html>
@@ -320,7 +326,7 @@ function showDirectoryStructure(originalPath, pathOffset, res) {
 
             body += '</ul>';
             res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-            res.end(fillHtmlTemplate(body, title));
+            res.end(fillHtmlTemplate(body, title, { path: originalPath, offset: pathOffset }));
         });
     }).on('error', err => {
         notFound(res, err.message);
