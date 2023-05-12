@@ -6,6 +6,10 @@ function getView(originalPath, pathOffset, res) {
     loadGithubData(originalPath, pathOffset, res, pagify);
 }
 
+function getSource(originalPath, pathOffset, res) {
+    loadGithubData(originalPath, pathOffset, res, markdown => markdown);
+}
+
 function getCards(originalPath, pathOffset, res) {
     loadGithubData(originalPath, pathOffset, res, cardify);
 }
@@ -50,7 +54,7 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
 
                         if (command == 'cards-json') {
                             res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                        } else if (command == 'anki' || command == 'quizlet') {
+                        } else if (command == 'anki' || command == 'quizlet' || command == 'source') {
                             res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
                         } else {
                             res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -232,6 +236,11 @@ function replaceAll(str, arr1, arr2) {
 }
 
 function fillHtmlTemplate(body, title, path, head = '') {
+    const links = ['view', 'cards', 'source'].map(link => {
+        const currentClass = link == path.path[path.offset - 1] ? ' class="current"' : '';
+        return '<a href="/' + path.path.slice(0, path.offset - 1).join('/') + '/' + link + '/' + path.path.slice(path.offset).join('/') + '"' + currentClass + '>' + link + '</a>';
+    });
+
     return `<!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -264,7 +273,7 @@ function fillHtmlTemplate(body, title, path, head = '') {
     a:hover {
         text-decoration: none;
     }
-    .dir {
+    .dir, .current {
         font-weight: bold;
     }
     .dark {
@@ -278,10 +287,7 @@ function fillHtmlTemplate(body, title, path, head = '') {
     ${head}
 </head>
 <body>
-<small style="position:absolute;top:0.25rem;left:0.5rem"><a href=".">this dir</a> | `
-        + `<a href="/${path.path.slice(0, path.offset - 1).join('/') + '/view/' + path.path.slice(path.offset).join('/')}">view</a> | `
-        + `<a href="/${path.path.slice(0, path.offset - 1).join('/') + '/cards/' + path.path.slice(path.offset).join('/')}">cards</a> | `
-        + `<a href="javascript:(function(){document.body.classList.toggle('dark');})();">dark</a></small>
+<small style="position:absolute;top:0.25rem;left:0.5rem"><a href=".">this dir</a> | ${links.join(' | ')} | <a href="javascript:(function(){document.body.classList.toggle('dark');})();">dark</a></small>
 ${body}
 </body>
 </html>
@@ -339,5 +345,5 @@ function notFound(res, err = 'page not found') {
 }
 
 module.exports = {
-    getView, getCards
+    getView, getCards, getSource
 };

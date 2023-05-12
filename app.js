@@ -15,6 +15,10 @@ const requestListener = function (req, res) {
             markview.getView(urlParts, pathOffset + 1, res);
             break;
 
+        case 'source':
+            markview.getSource(urlParts, pathOffset + 1, res);
+            break;
+
         case 'cards':
         case 'anki':
         case 'quizlet':
