@@ -241,6 +241,26 @@ function fillHtmlTemplate(body, title, path, head = '') {
         return '<a href="/' + path.path.slice(0, path.offset - 1).join('/') + '/' + link + '/' + path.path.slice(path.offset).join('/') + '"' + currentClass + '>' + link + '</a>';
     });
 
+    const matomo = `<!-- Matomo -->
+    <script>
+        var _paq = window._paq = window._paq || [];
+        _paq.push(['disableCookies']);
+        _paq.push(['trackPageView']);
+        _paq.push(['enableLinkTracking']);
+        (function() {
+            var u = "//www.kolos.ga/matomo/";
+            _paq.push(['setTrackerUrl', u + 'matomo.php']);
+            _paq.push(['setSiteId', '1']);
+            var d = document,
+                g = d.createElement('script'),
+                s = d.getElementsByTagName('script')[0];
+            g.async = true;
+            g.src = u + 'matomo.js';
+            s.parentNode.insertBefore(g, s);
+        })();
+    </script>
+    <!-- End Matomo Code -->`;
+
     return `<!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -284,6 +304,7 @@ function fillHtmlTemplate(body, title, path, head = '') {
         color: lightyellow;
     }
     </style>
+    ${matomo}
     ${head}
 </head>
 <body>
