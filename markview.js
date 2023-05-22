@@ -2,6 +2,10 @@ const https = require('https');
 require('dotenv').config();
 const marktex = require('./marktex');
 
+const repositories = {
+    'notes-ipp': 'vitkolos/notes-ipp',
+};
+
 function getView(originalPath, pathOffset, res) {
     loadGithubData(originalPath, pathOffset, res, pagify);
 }
@@ -17,15 +21,20 @@ function getCards(originalPath, pathOffset, res) {
 function loadGithubData(originalPath, pathOffset, res, processor) {
     let path = originalPath.slice(pathOffset);
 
-    if (path[0] == 'notes-ipp') {
+    if (path[0] in repositories) {
         if (path[1] == 'blob') {
             path.splice(1, 1);
             res.writeHead(302, {
                 'Location': '/' + originalPath.slice(0, pathOffset).join('/') + '/' + path.join('/')
             });
             res.end();
+        } else if (path.length == 1) {
+            res.writeHead(302, {
+                'Location': '/' + originalPath.join('/') + '/main/'
+            });
+            res.end();
         } else {
-            https.get('https://raw.githubusercontent.com/vitkolos/' + path.join('/'), res2 => {
+            https.get('https://raw.githubusercontent.com/' + repositories[path[0]] + '/' + path.slice(1).join('/'), res2 => {
                 let data = [];
 
                 if (res2.statusCode != 200) {
@@ -316,10 +325,10 @@ ${body}
 }
 
 function showDirectoryStructure(originalPath, pathOffset, res) {
-    const repository = originalPath[pathOffset];
+    const repositorySlug = originalPath[pathOffset];
     const branch = originalPath[pathOffset + 1];
     const pathInRepo = originalPath.slice(pathOffset + 2).join('/');
-    const apiUrl = 'https://vitkolos:' + process.env.GH_TOKEN + '@api.github.com/repos/vitkolos/' + repository + '/contents/' + pathInRepo + '?ref=' + branch;
+    const apiUrl = 'https://vitkolos:' + process.env.GH_TOKEN + '@api.github.com/repos/' + repositories[repositorySlug] + '/contents/' + pathInRepo + '?ref=' + branch;
 
     https.get(apiUrl, { headers: { 'User-Agent': 'vitkolos' } }, res2 => {
         let data = [];
@@ -338,7 +347,7 @@ function showDirectoryStructure(originalPath, pathOffset, res) {
             const items = JSON.parse(content);
             let reversePath = originalPath.slice(pathOffset + 2);
             reversePath.reverse();
-            reversePath.push(repository);
+            reversePath.push(repositorySlug);
             const title = decodeURIComponent(reversePath.join(' | '));
             const doubleDotAddress = pathInRepo.length ? ('/' + originalPath.slice(0, -1).join('/') + '/') : '/';
             let body = '<ul>';
