@@ -297,7 +297,7 @@ function fillHtmlTemplate(body, title, path, head = '') {
         border: 1px solid #ccc;
         padding: 0.25rem 0.5rem;
     }
-    li a {
+    ul.index li a {
         display: block;
     }
     a:hover {
@@ -351,7 +351,7 @@ function showDirectoryStructure(originalPath, pathOffset, res) {
             reversePath.push(repositorySlug);
             const title = decodeURIComponent(reversePath.join(' | '));
             const doubleDotAddress = pathInRepo.length ? ('/' + originalPath.slice(0, -1).join('/') + '/') : '/';
-            let body = '<ul>';
+            let body = '<ul class="index">';
             body += `<li><a href="${doubleDotAddress}" class="dir">..</a></li>`;
 
             items.forEach(item => {
