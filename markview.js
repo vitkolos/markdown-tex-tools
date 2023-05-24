@@ -70,7 +70,7 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
                         }
 
                         const content = Buffer.concat(data).toString();
-                        res.end(processor(content, command, { path: originalPath, offset: pathOffset }));
+                        res.end(processor(content, command, { path: originalPath, offset: pathOffset, repo: repositories[path[0]] }));
                     }
                 });
             }).on('error', err => {
@@ -249,6 +249,7 @@ function fillHtmlTemplate(body, title, path, head = '') {
         const currentClass = link == path.path[path.offset - 1] ? ' class="current"' : '';
         return '<a href="/' + path.path.slice(0, path.offset - 1).join('/') + '/' + link + '/' + path.path.slice(path.offset).join('/') + '"' + currentClass + '>' + link + '</a>';
     });
+    const ghUrl = 'https://github.com/' + path.repo + '/blob/' + path.path.slice(path.offset + 1).join('/');
 
     const matomo = `<!-- Matomo -->
     <script>
@@ -317,7 +318,7 @@ function fillHtmlTemplate(body, title, path, head = '') {
     ${head}
 </head>
 <body>
-<small style="position:absolute;top:0.25rem;left:0.5rem"><a href=".">this dir</a> | ${links.join(' | ')} | <a href="javascript:(function(){document.body.classList.toggle('dark');})();">dark</a></small>
+<small style="position:absolute;top:0.25rem;left:0.5rem"><a href=".">this dir</a> | ${links.join(' | ')} | <a href="${ghUrl}">edit</a> | <a href="javascript:(function(){document.body.classList.toggle('dark');})();">dark</a></small>
 ${body}
 </body>
 </html>
@@ -362,7 +363,7 @@ function showDirectoryStructure(originalPath, pathOffset, res) {
 
             body += '</ul>';
             res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-            res.end(fillHtmlTemplate(body, title, { path: originalPath, offset: pathOffset }));
+            res.end(fillHtmlTemplate(body, title, { path: originalPath, offset: pathOffset, repo: repositories[repositorySlug] }));
         });
     }).on('error', err => {
         notFound(res, err.message);
