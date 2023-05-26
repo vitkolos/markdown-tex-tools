@@ -287,6 +287,9 @@ function fillHtmlTemplate(body, title, path, head = '') {
         margin: 5rem auto;
         padding: 0 1rem;
     }
+    code {
+        font-size: 1.25em;
+    }
     li {
         margin: 0.5rem 0;
     }
