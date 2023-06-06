@@ -147,6 +147,7 @@ function cardify(markdown, command, path) {
         }).join(cardSep);
     } else {
         const options = { throwOnError: false };
+        const staticRoute = '/' + path.path.slice(0, path.offset - 1).join('/') + '/static';
         let body = `
             <h1>${title}</h1>
             <div class="htbutton">
@@ -203,9 +204,9 @@ function cardify(markdown, command, path) {
                 </div>
             </div>
             <script>var cardIds = ['${allCards.map(card => card.id).join('\', \'')}'];</script>
-            <script src="/node/static/cards.js"></script>
+            <script src="${staticRoute}/cards.js"></script>
         `;
-        const head = '<link rel="stylesheet" href="/node/static/cards.css">';
+        const head = `<link rel="stylesheet" href="${staticRoute}/cards.css">`;
         return fillHtmlTemplate(body, title + ': kartičky', path, head);
     }
 }
