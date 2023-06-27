@@ -8,7 +8,8 @@ const static = require('./static');
 const requestListener = function (req, res) {
     // where the real path starts; e.g. /node/ = 1, /script/node/app/ = 3
     const pathOffset = 1;
-    const urlParts = req.url.replace(/^\/|\/$/g, '').split('/');
+    const urlWithoutQuery = req.url.replace(/\?.*$/, '');
+    const urlParts = urlWithoutQuery.replace(/^\/|\/$/g, '').split('/');
 
     switch (urlParts[pathOffset]) {
         case 'view':
@@ -31,7 +32,7 @@ const requestListener = function (req, res) {
             break;
 
         default:
-            res.writeHead(404);
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
             res.end('page not found');
             break;
     }

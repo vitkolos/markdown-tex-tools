@@ -375,7 +375,7 @@ function showDirectoryStructure(originalPath, pathOffset, res) {
 }
 
 function notFound(res, err = 'page not found') {
-    res.writeHead(404);
+    res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end(err);
 }
 
