@@ -259,7 +259,7 @@ function fillHtmlTemplate(body, title, path, head = '') {
         _paq.push(['trackPageView']);
         _paq.push(['enableLinkTracking']);
         (function() {
-            var u = "//www.kolos.ga/matomo/";
+            var u = "//www.vitkolos.cz/matomo/";
             _paq.push(['setTrackerUrl', u + 'matomo.php']);
             _paq.push(['setSiteId', '1']);
             var d = document,
