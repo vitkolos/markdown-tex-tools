@@ -206,6 +206,10 @@ button {
     padding-left: 25px;
 }
 
+.card .description p {
+    margin: 0.25rem 0;
+}
+
 .flipper {
     height: 200px;
 }
