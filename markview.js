@@ -93,36 +93,48 @@ function pagify(markdown, command, path) {
 function cardify(markdown, command, path) {
     let title = '';
     let description = '';
+    let descriptionOpen = true;
     let currentHeading = '';
-    let currentCard;
+    let currentCard = null;
     const allCards = [];
     const categories = [];
     const indentationMatch = markdown.match(/\n([ \t]+)/);
     const indentation = (indentationMatch && indentationMatch.length == 2) ? indentationMatch[1] : '\t';
-    const ulBullet = '[-*+] ';
-    const ulRegExp = new RegExp('^' + ulBullet);
+    const listBullet = '([-*+]|[0-9]+\.) ';
+    const ulRegExp = new RegExp('^[-*+] ');
+
+    const finishCard = (currentCard, allCards) => {
+        if (currentCard && currentCard.descriptionLines.length) {
+            allCards.push(currentCard);
+        }
+    };
 
     markdown.split('\n').forEach(line => {
         if (line != '') {
-            const ll = getListLevel(line, indentation, ulBullet);
+            const ll = getListLevel(line, indentation, listBullet);
 
             if (line.substring(0, 2) == '# ') {
                 title = line.substring(2);
             } else if (line.substring(0, 3) == '## ') {
+                finishCard(currentCard, allCards);
+                currentCard = null;
+                descriptionOpen = false;
+
                 currentHeading = line.substring(3);
                 categories.push(currentHeading);
             } else if (ll == 0) {
-                if (currentCard && currentCard.descriptionLines.length) {
-                    allCards.push(currentCard);
-                }
+                finishCard(currentCard, allCards);
+                descriptionOpen = false;
 
                 currentCard = new Object();
                 currentCard.title = line.substring(2);
                 currentCard.category = currentHeading;
                 currentCard.id = generateId(currentCard.title, allCards);
                 currentCard.descriptionLines = [];
-            } else if (currentCard == undefined) {
-                description = line;
+            } else if (currentCard == null) {
+                if (descriptionOpen && description == '' && line != '') {
+                    description = line;
+                }
             } else if (ll == -1) {
                 currentCard.descriptionLines.push(line);
             } else {
@@ -130,6 +142,8 @@ function cardify(markdown, command, path) {
             }
         }
     });
+
+    finishCard(currentCard, allCards);
 
     if (command == 'cards-json') {
         return JSON.stringify({ title, description, categories, cards: allCards });
@@ -212,8 +226,8 @@ function cardify(markdown, command, path) {
     }
 }
 
-function getListLevel(line, indentation, ulBullet) {
-    const gllMatch = line.match(new RegExp('^((' + indentation + ')*)' + ulBullet));
+function getListLevel(line, indentation, listBullet) {
+    const gllMatch = line.match(new RegExp('^((' + indentation + ')*)' + listBullet));
 
     if (gllMatch == null || indentation == '') {
         return -1;
