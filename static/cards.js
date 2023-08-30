@@ -7,7 +7,7 @@
 // visitedCards = levels of visited cards (object … id: level)
 
 var currentCard, cardsToVisit,
-    currentRun, lastCards, lcPointer, visitedCards,
+    currentRun, selectedCategories, lastCards, lcPointer, visitedCards,
     controlsElement, keysBlocked;
 
 const lsPrefix = 'cards_' + slugify(decodeURIComponent(location.pathname)) + '_';
@@ -26,6 +26,8 @@ function initialize() {
     lastCards = tempLC ? JSON.parse(tempLC) : [];
     const tempVC = localStorage.getItem(lsPrefix + 'visitedCards');
     visitedCards = tempVC ? JSON.parse(tempVC) : {};
+    const tempSC = localStorage.getItem(lsPrefix + 'selectedCategories');
+    selectedCategories = tempSC ? JSON.parse(tempSC) : [[], []];
 
     // helper element
     controlsElement = document.getElementById('controls');
@@ -80,6 +82,14 @@ function initialize() {
     document.addEventListener('keyup', event => {
         keysBlocked = false;
     });
+
+    document.querySelectorAll('input[type="checkbox"]').forEach(el => {
+        el.addEventListener('keydown', event => {
+            if (event.code == 'Enter') {
+                el.click();
+            }
+        });
+    });
 }
 
 function someInitialCalls() {
@@ -93,12 +103,14 @@ function someInitialCalls() {
     updateStats();
     showOrHideControls();
     cleanOldLS();
+    prepareCheckboxes();
 }
 
 // localStorage stuff
 
 function saveCurrentState() {
     lsSet('currentRun');
+    lsSet('selectedCategories');
     lsSet('lcPointer');
     lsSet('lastCards');
     lsSet('visitedCards');
@@ -117,6 +129,9 @@ function lsSet(name) {
             break;
         case 'visitedCards':
             localStorage.setItem(lsPrefix + 'visitedCards', JSON.stringify(visitedCards));
+            break;
+        case 'selectedCategories':
+            localStorage.setItem(lsPrefix + 'selectedCategories', JSON.stringify(selectedCategories));
             break;
     }
 }
@@ -166,10 +181,13 @@ function reset() {
     lsSet('currentRun');
     visitedCards = {};
     lsSet('visitedCards');
+    selectedCategories = [[], []];
+    lsSet('selectedCategories');
     cardsToVisit = [];
     updateStats();
     showOrHideControls();
     showCurrentCard();
+    prepareCheckboxes();
 }
 
 function clearState() {
@@ -191,11 +209,71 @@ function startRun(number) {
     showOrHideControls();
 }
 
+// checkbox functions
+
+function prepareCheckboxes() {
+    document.getElementById('filtersactive').checked = false;
+    document.getElementById('filters').classList.remove('show');
+
+    if (selectedCategories[0].length + selectedCategories[1].length > 0) {
+        document.getElementById('filtersactive').click();
+    }
+
+    [...document.getElementById('filters').children[0].getElementsByTagName('input')].forEach(el => {
+        el.checked = selectedCategories[0].includes(el.getAttribute('data-title'));
+    });
+    [...document.getElementById('filters').children[1].getElementsByTagName('input')].forEach(el => {
+        el.checked = selectedCategories[1].includes(el.getAttribute('data-title'));
+    });
+}
+
+function toggleFilters() {
+    const newState = document.getElementById('filtersactive').checked;
+    const lastCatLen = selectedCategories[0].length + selectedCategories[1].length;
+
+    if (newState) {
+        document.getElementById('filters').classList.add('show');
+    } else {
+        selectedCategories = [[], []];
+        lsSet('selectedCategories');
+        prepareCheckboxes();
+
+        if (currentRun !== undefined && lastCatLen > 0) {
+            startRun(currentRun);
+        }
+    }
+}
+
+function toggleFilter(group, category, element) {
+    if (element.checked) {
+        if (!selectedCategories[group].includes(category)) {
+            selectedCategories[group].push(category);
+        }
+    } else {
+        const index = selectedCategories[group].indexOf(category);
+
+        if (index !== -1) {
+            selectedCategories[group].splice(index, 1);
+        }
+    }
+
+    lsSet('selectedCategories');
+
+    if (currentRun !== undefined) {
+        startRun(currentRun);
+    }
+}
+
+function isAllowedByCategoryFilter(id) {
+    return ((selectedCategories[0].length == 0 || selectedCategories[0].includes(cardCategories[id][0]))
+        && (selectedCategories[1].length == 0 || selectedCategories[1].includes(cardCategories[id][1])));
+}
+
 // card background functions
 
 function generateCardsToVisit() {
     cardsToVisit = cardIds.filter(id => !lastCards.includes(id)
-        && (!(id in visitedCards) || visitedCards[id] <= currentRun));
+        && (!(id in visitedCards) || visitedCards[id] <= currentRun) && isAllowedByCategoryFilter(id));
 }
 
 function pickRandomCard() {
@@ -257,7 +335,7 @@ function exportData() {
         document.getElementById('exporthere').textContent = '';
         document.getElementById('exportbtn').textContent = 'export';
     } else {
-        document.getElementById('exporthere').textContent = JSON.stringify({ currentRun, lastCards, lcPointer, visitedCards });
+        document.getElementById('exporthere').textContent = JSON.stringify({ currentRun, selectedCategories, lastCards, lcPointer, visitedCards });
         document.getElementById('exportbtn').textContent = 'skrýt export';
     }
 }
@@ -267,9 +345,10 @@ function importData() {
 
     if (data != null) {
         const dataObj = JSON.parse(data);
-        ({ currentRun, lastCards, lcPointer, visitedCards } = dataObj);
+        ({ currentRun, selectedCategories =[[], []], lastCards, lcPointer, visitedCards } = dataObj);
         someInitialCalls();
         saveCurrentState();
+        prepareCheckboxes();
     }
 }
 

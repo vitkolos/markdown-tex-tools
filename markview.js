@@ -188,7 +188,14 @@ function cardify(markdown, command, path) {
                     <button type="button" onclick="startRun(1);">≤ 1</button>
                     <button type="button" onclick="startRun(2);">≤ 2</button>
                     <button type="button" onclick="startRun(3);">≤ 3</button>
-                    <button type="button" onclick="startRun(4);">všechny karty</button>
+                    <button type="button" onclick="startRun(4);">všechny</button>
+                    <input type="checkbox" id="filtersactive" onclick="toggleFilters();" /><label for="filtersactive">filtrovat</label>
+                </div>
+                <div class="filters" id="filters">
+                    ${categories.map((group, gIndex) => `<div>${group.map((category, cIndex) =>
+            `<input type="checkbox" id="filter-${gIndex}-${cIndex}" onclick="toggleFilter(${gIndex}, '${category}', this);" data-title="${category}" />
+                        <label for="filter-${gIndex}-${cIndex}">${category}</label>`
+        ).join('')}</div>`).join('')}
                 </div>
                 <div class="options">
                     <button type="button" onclick="resetPrompt();">reset</button>
@@ -232,7 +239,10 @@ function cardify(markdown, command, path) {
                     <button type="button" class="mark" onclick="mark(4);">4 umím výborně</button>
                 </div>
             </div>
-            <script>var cardIds = ['${allCards.map(card => card.id).join('\', \'')}'];</script>
+            <script>
+                var cardIds = ['${allCards.map(card => card.id).join('\', \'')}'];
+                var cardCategories = {${allCards.map(card => `'${card.id}': ['${card.categories.join('\', \'')}'], `).join('')}};
+            </script>
             <script src="${staticRoute}/cards.js"></script>
         `;
         const head = `<link rel="stylesheet" href="${staticRoute}/cards.css">`;

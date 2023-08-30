@@ -12,7 +12,7 @@ h1 {
     line-height: 1.2;
 }
 
-button {
+button, label {
     text-transform: uppercase;
     font-size: 0.8rem;
     letter-spacing: 1px;
@@ -20,7 +20,16 @@ button {
     margin: 0.25rem;
 }
 
-[onclick] {
+label {
+    margin-left: 0;
+    padding-left: 0.4rem;
+}
+
+input[type="checkbox"] {
+    margin-right: 0;
+}
+
+[onclick], input[type="checkbox"], label {
     cursor: pointer;
 }
 
@@ -32,7 +41,8 @@ button {
 .welldone,
 .hidetop h1,
 .hidetop .top,
-.htbutton {
+.htbutton,
+.filters {
     display: none;
 }
 
