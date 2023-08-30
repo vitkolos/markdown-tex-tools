@@ -38,22 +38,37 @@ function initialize() {
         if (currentCard) {
             switch (event.code) {
                 case 'Space':
+                case 'Numpad0':
                     flip();
                     event.preventDefault();
                     return false;
                 case 'ArrowRight':
+                case 'KeyD':
+                case 'NumpadAdd':
                     next();
                     break;
                 case 'ArrowLeft':
+                case 'KeyA':
+                case 'NumpadSubtract':
                     previous();
+                    break;
+                case 'KeyW':
+                    window.scrollBy({ left: 0, top: -100, behavior: 'smooth' });
+                    break;
+                case 'KeyS':
+                    window.scrollBy({ left: 0, top: 100, behavior: 'smooth' });
                     break;
                 case 'Digit1':
                 case 'Digit2':
                 case 'Digit3':
                 case 'Digit4':
+                case 'Numpad1':
+                case 'Numpad2':
+                case 'Numpad3':
+                case 'Numpad4':
                     if (!keysBlocked) {
                         keysBlocked = true;
-                        mark(+event.code.substring(5));
+                        mark(+event.code.slice(-1));
                     }
                     break;
             }
