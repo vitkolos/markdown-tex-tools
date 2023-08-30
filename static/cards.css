@@ -191,14 +191,18 @@ button {
     border-radius: 10px;
 }
 
-.card .category {
+.card .categories {
     color: grey;
     font-size: 0.7rem;
     text-transform: uppercase;
     margin-bottom: 0.3rem;
 }
 
-.card .category:empty {
+.card .categories span:not(:last-child) {
+    margin-right: 1rem;
+}
+
+.card .categories:empty {
     display: none;
 }
 

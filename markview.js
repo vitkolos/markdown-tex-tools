@@ -97,11 +97,12 @@ function cardify(markdown, command, path) {
     let currentHeading = '';
     let currentCard = null;
     const allCards = [];
-    const categories = [];
+    const categories = [[], []];
     const indentationMatch = markdown.match(/\n([ \t]+)/);
     const indentation = (indentationMatch && indentationMatch.length == 2) ? indentationMatch[1] : '\t';
     const listBullet = '([-*+]|[0-9]+\.) ';
     const ulRegExp = new RegExp('^[-*+] ');
+    const titleCategoryRegExp = new RegExp("^\\S+: ");
 
     const finishCard = (currentCard, allCards) => {
         if (currentCard && currentCard.descriptionLines.length) {
@@ -121,16 +122,29 @@ function cardify(markdown, command, path) {
                 descriptionOpen = false;
 
                 currentHeading = line.substring(3);
-                categories.push(currentHeading);
+                categories[0].push(currentHeading);
             } else if (ll == 0) {
                 finishCard(currentCard, allCards);
                 descriptionOpen = false;
 
                 currentCard = new Object();
                 currentCard.title = line.substring(2);
-                currentCard.category = currentHeading;
+                currentCard.categories = [null, null];
                 currentCard.id = generateId(currentCard.title, allCards);
                 currentCard.descriptionLines = [];
+
+                if (currentHeading) {
+                    currentCard.categories[0] = currentHeading;
+                }
+
+                if (titleCategoryRegExp.test(currentCard.title)) {
+                    const catFromTitle = currentCard.title.split(':', 2)[0];
+                    currentCard.categories[1] = catFromTitle;
+
+                    if (!categories[1].includes(catFromTitle)) {
+                        categories[1].push(catFromTitle);
+                    }
+                }
             } else if (currentCard == null) {
                 if (descriptionOpen && description == '' && line != '') {
                     description = line;
@@ -193,7 +207,7 @@ function cardify(markdown, command, path) {
             body += `
                 <div id="${card.id}" class="card">
                     <div class="title" onclick="flip();">
-                        <div class="category">${card.category}</div>
+                        <div class="categories">${card.categories[0] ? card.categories[0] : ''}</div>
                         ${marktex.processKatex(card.title, options)}
                     </div>
                     <div class="description">${marktex.processKatex(desc, options)}</div>
