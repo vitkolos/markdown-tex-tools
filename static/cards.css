@@ -125,23 +125,23 @@ button {
     background-color: #dcedc8;
 }
 
-.dark .stats i:nth-child(1) {
+[data-theme="dark"] .stats i:nth-child(1) {
     background-color: #333;
 }
 
-.dark .stats i:nth-child(2) {
+[data-theme="dark"] .stats i:nth-child(2) {
     background-color: #5C1914;
 }
 
-.dark .stats i:nth-child(3) {
+[data-theme="dark"] .stats i:nth-child(3) {
     background-color: #603900;
 }
 
-.dark .stats i:nth-child(4) {
+[data-theme="dark"] .stats i:nth-child(4) {
     background-color: #605816;
 }
 
-.dark .stats i:nth-child(5) {
+[data-theme="dark"] .stats i:nth-child(5) {
     background-color: #34491C;
 }
 

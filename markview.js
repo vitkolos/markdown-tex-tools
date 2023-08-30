@@ -266,6 +266,7 @@ function fillHtmlTemplate(body, title, path, head = '') {
         return '<a href="/' + path.path.slice(0, path.offset - 1).join('/') + '/' + link + '/' + path.path.slice(path.offset).join('/') + '"' + currentClass + '>' + link + '</a>';
     });
     const ghUrl = 'https://github.com/' + path.repo + '/blob/' + path.path.slice(path.offset + 1).join('/');
+    const staticRoute = '/' + path.path.slice(0, path.offset - 1).join('/') + '/static';
 
     const matomo = `<!-- Matomo -->
     <script>
@@ -294,48 +295,13 @@ function fillHtmlTemplate(body, title, path, head = '') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${title}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css" integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
-    <style>
-    body {
-        font-family: sans-serif;
-        font-size: 1.1em;
-        line-height: 1.5;
-        max-width: 700px;
-        margin: 5rem auto;
-        padding: 0 1rem;
-    }
-    code {
-        font-size: 1.25em;
-    }
-    li {
-        margin: 0.5rem 0;
-    }
-    table {
-        border-collapse: collapse;
-    }
-    td {
-        border: 1px solid #ccc;
-        padding: 0.25rem 0.5rem;
-    }
-    ul.index li a {
-        display: block;
-    }
-    a:hover {
-        text-decoration: none;
-    }
-    .dir, .current {
-        font-weight: bold;
-    }
-    .dark {
-        color: #ccc;
-        background-color: black;
-        color-scheme: dark;
-    }
-    </style>
+    <link rel="stylesheet" href="${staticRoute}/style.css">
+    <script src="${staticRoute}/theme.js"></script>
     ${matomo}
     ${head}
 </head>
 <body>
-<small style="position:absolute;top:0.25rem;left:0.5rem"><a href=".">this dir</a> | ${links.join(' | ')} | <a href="${ghUrl}">edit</a> | <a href="javascript:(function(){document.body.classList.toggle('dark');})();">dark</a></small>
+<small style="position:absolute;top:0.25rem;left:0.5rem"><a href=".">this dir</a> | ${links.join(' | ')} | <a href="${ghUrl}">edit</a> | <a href="#" id="theme-toggle">dark</a></small>
 ${body}
 </body>
 </html>
