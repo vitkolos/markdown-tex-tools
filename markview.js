@@ -328,9 +328,7 @@ function fillHtmlTemplate(body, title, path, head = '') {
     .dark {
         color: #ccc;
         background-color: black;
-    }
-    .dark a {
-        color: lightyellow;
+        color-scheme: dark;
     }
     </style>
     ${matomo}

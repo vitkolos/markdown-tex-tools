@@ -68,7 +68,7 @@ button {
     display: inline-block;
     padding: 0.25rem 0.5rem;
     text-align: center;
-    border: 1px solid black;
+    border: 1px solid currentcolor;
     margin-right: 0.3rem;
     margin-bottom: 0.3rem;
     min-width: 3rem;
@@ -125,6 +125,26 @@ button {
     background-color: #dcedc8;
 }
 
+.dark .stats i:nth-child(1) {
+    background-color: #333;
+}
+
+.dark .stats i:nth-child(2) {
+    background-color: #5C1914;
+}
+
+.dark .stats i:nth-child(3) {
+    background-color: #603900;
+}
+
+.dark .stats i:nth-child(4) {
+    background-color: #605816;
+}
+
+.dark .stats i:nth-child(5) {
+    background-color: #34491C;
+}
+
 .current-run::before {
     content: 'právě procházíš';
 }
@@ -132,7 +152,7 @@ button {
 .learn,
 .options {
     display: inline-block;
-    border: 1px black solid;
+    border: 1px solid currentcolor;
     padding: 0.25rem 0.5rem;
 }
 
