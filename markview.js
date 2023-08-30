@@ -137,12 +137,13 @@ function cardify(markdown, command, path) {
         const titleSep = (command == 'anki') ? '; ' : ';';
         const lineSep = (command == 'anki') ? '<br>' : '\n';
         const cardSep = (command == 'anki') ? '\n' : '\n\n';
+        const separatorRemover = (command == 'anki') ? (text => text.replace(/;/g, ',')) : (text => text); // this fixes semicolons causing errors in anki
 
         return allCards.map(card => {
             if (card.descriptionLines.length == 1 && ulRegExp.test(card.descriptionLines[0])) {
-                return card.title + titleSep + card.descriptionLines[0].substring(2);
+                return separatorRemover(card.title) + titleSep + separatorRemover(card.descriptionLines[0].substring(2));
             } else {
-                return card.title + titleSep + card.descriptionLines.join(lineSep);
+                return separatorRemover(card.title) + titleSep + separatorRemover(card.descriptionLines.join(lineSep));
             }
         }).join(cardSep);
     } else {

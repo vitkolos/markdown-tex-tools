@@ -3,11 +3,19 @@ const katex = require('katex');
 
 function markedKatex(options) {
     return {
+        walkTokens,
         extensions: [
             blockKatex(options),
             inlineKatex(options)
         ]
     };
+}
+
+function walkTokens(token) {
+    if (token.type === 'text') {
+        // non-breaking space (nbsp)
+        token.text = token.text.replace(/(?<=[\s(])([kvszaiou])\s/gi, '$1\u00A0');
+    }
 }
 
 function inlineKatex(options) {
