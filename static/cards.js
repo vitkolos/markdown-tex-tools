@@ -253,8 +253,13 @@ function flip() {
 // data import/export
 
 function exportData() {
-    document.getElementById('exporthere').textContent = document.getElementById('exporthere').textContent
-        ? '' : JSON.stringify({ currentRun, lastCards, lcPointer, visitedCards });
+    if (document.getElementById('exporthere').textContent) {
+        document.getElementById('exporthere').textContent = '';
+        document.getElementById('exportbtn').textContent = 'export';
+    } else {
+        document.getElementById('exporthere').textContent = JSON.stringify({ currentRun, lastCards, lcPointer, visitedCards });
+        document.getElementById('exportbtn').textContent = 'skrýt export';
+    }
 }
 
 function importData() {

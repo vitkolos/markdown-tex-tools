@@ -178,7 +178,7 @@ function cardify(markdown, command, path) {
                 </div>
                 <div class="options">
                     <button type="button" onclick="resetPrompt();">reset</button>
-                    <button type="button" onclick="exportData();">export</button>
+                    <button type="button" onclick="exportData();" id="exportbtn">export</button>
                     <button type="button" onclick="importData();">import</button>
                     <button type="button" onclick="hideTop(true);">skrýt záhlaví</button>
                 </div>
