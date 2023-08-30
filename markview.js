@@ -189,12 +189,12 @@ function cardify(markdown, command, path) {
                     <button type="button" onclick="startRun(2);">≤ 2</button>
                     <button type="button" onclick="startRun(3);">≤ 3</button>
                     <button type="button" onclick="startRun(4);">všechny</button>
-                    <input type="checkbox" id="filtersactive" onclick="toggleFilters();" /><label for="filtersactive">filtrovat</label>
+                    <span class="filtersactive-wrapper"><input type="checkbox" id="filtersactive" onclick="toggleFilters();" /><label for="filtersactive">filtrovat</label></span>
                 </div>
                 <div class="filters" id="filters">
                     ${categories.map((group, gIndex) => `<div>${group.map((category, cIndex) =>
-            `<input type="checkbox" id="filter-${gIndex}-${cIndex}" onclick="toggleFilter(${gIndex}, '${category}', this);" data-title="${category}" />
-                        <label for="filter-${gIndex}-${cIndex}">${category}</label>`
+            `<span><input type="checkbox" id="filter-${gIndex}-${cIndex}" onclick="toggleFilter(${gIndex}, '${category}', this);" data-title="${category}" />
+                        <label for="filter-${gIndex}-${cIndex}">${category}</label></span>`
         ).join('')}</div>`).join('')}
                 </div>
                 <div class="options">

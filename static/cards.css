@@ -41,8 +41,7 @@ input[type="checkbox"] {
 .welldone,
 .hidetop h1,
 .hidetop .top,
-.htbutton,
-.filters {
+.htbutton {
     display: none;
 }
 
@@ -166,9 +165,8 @@ input[type="checkbox"] {
     padding: 0.25rem 0.5rem;
 }
 
-.learn {
-    margin-right: 1rem;
-    margin-bottom: 1rem;
+.options {
+    margin-top: 1rem;
 }
 
 .learn::before,
@@ -191,6 +189,28 @@ input[type="checkbox"] {
 
 .htbutton button {
     margin-left: 1rem;
+}
+
+.filtersactive-wrapper {
+    margin-left: 1rem;
+    display: inline-block;
+}
+
+.filters {
+    margin: 0;
+    display: none;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.filters-show {
+    display: flex;
+}
+
+.filters div {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
 }
 
 /* card */

@@ -213,7 +213,7 @@ function startRun(number) {
 
 function prepareCheckboxes() {
     document.getElementById('filtersactive').checked = false;
-    document.getElementById('filters').classList.remove('show');
+    document.getElementById('filters').classList.remove('filters-show');
 
     if (selectedCategories[0].length + selectedCategories[1].length > 0) {
         document.getElementById('filtersactive').click();
@@ -232,7 +232,7 @@ function toggleFilters() {
     const lastCatLen = selectedCategories[0].length + selectedCategories[1].length;
 
     if (newState) {
-        document.getElementById('filters').classList.add('show');
+        document.getElementById('filters').classList.add('filters-show');
     } else {
         selectedCategories = [[], []];
         lsSet('selectedCategories');
