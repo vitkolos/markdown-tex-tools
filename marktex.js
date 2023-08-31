@@ -1,8 +1,9 @@
 const marked = require('marked');
 const katex = require('katex');
 
-function markedKatex(options) {
+function markedKatex(options, renderer) {
     return {
+        renderer,
         walkTokens,
         extensions: [
             blockKatex(options),
@@ -60,8 +61,8 @@ function blockKatex(options) {
     };
 }
 
-function processKatex(markdown, options = {}) {
-    marked.use(markedKatex(options));
+function processKatex(markdown, options = {}, renderer = new marked.Renderer()) {
+    marked.use(markedKatex(options, renderer));
     return marked.parse(markdown);
 }
 

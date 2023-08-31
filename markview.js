@@ -1,5 +1,6 @@
 const https = require('https');
 require('dotenv').config();
+const marked = require('marked');
 const marktex = require('./marktex');
 
 const repositories = {
@@ -86,8 +87,14 @@ function pagify(markdown, command, path) {
     const options = { throwOnError: false };
     const titleMatch = markdown.match(/^# (.*)/);
     const title = (titleMatch && titleMatch.length == 2) ? titleMatch[1] : 'Markdown';
-    const body = marktex.processKatex(markdown, options);
-    return fillHtmlTemplate(body, title, path);
+
+    const renderer = new marked.Renderer();
+    const tocSlugger = new marked.Slugger();
+    const toc = [];
+    prepareTocGenerator(renderer, toc, tocSlugger);
+    const body = marktex.processKatex(markdown, options, renderer);
+
+    return fillHtmlTemplate(placeToc(body, toc), title, path);
 }
 
 function cardify(markdown, command, path) {
@@ -284,6 +291,34 @@ function replaceAll(str, arr1, arr2) {
     });
 }
 
+function prepareTocGenerator(renderer, toc, tocSlugger) {
+    const r = {
+        heading: renderer.heading.bind(renderer),
+    };
+
+    renderer.heading = (text, level, raw, slugger) => {
+        toc.push({
+            level,
+            text, // with html tags
+            raw, // pure text (contains neither tags nor markdown)
+            slug: tocSlugger.slug(raw)
+        });
+
+        return r.heading(text, level, raw, slugger);
+    };
+}
+
+function placeToc(pageHtml, toc) {
+    toc.shift(); // remove first h1
+
+    if (toc.length < 3) {
+        return pageHtml;
+    }
+
+    const tocHtml = `<div class="toc">${toc.map(h => `<a href="#${h.slug}" class="toc-h${h.level}">${h.raw}</a>`).join('')}</div>`;
+    return pageHtml.replace('</h1>', '</h1>' + tocHtml);
+}
+
 function fillHtmlTemplate(body, title, path, head = '') {
     const links = ['view', 'cards', 'source'].map(link => {
         const currentClass = link == path.path[path.offset - 1] ? ' class="current"' : '';
@@ -325,7 +360,8 @@ function fillHtmlTemplate(body, title, path, head = '') {
     ${head}
 </head>
 <body>
-<small style="position:absolute;top:0.25rem;left:0.5rem"><a href=".">this dir</a> | ${links.join(' | ')} | <a href="${ghUrl}">edit</a> | <a href="#" id="theme-toggle">dark</a></small>
+<small class="top-nav"><a href=".">this dir</a> | ${links.join(' | ')} | <a href="${ghUrl}">edit</a> | <a href="#" id="theme-toggle">dark</a></small>
+<small class="bottom-nav"><a href="#">top</a></small>
 ${body}
 </body>
 </html>

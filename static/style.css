@@ -32,7 +32,8 @@ a:hover {
     text-decoration: none;
 }
 
-.dir, .current {
+.dir,
+.current {
     font-weight: bold;
 }
 
@@ -40,4 +41,43 @@ a:hover {
     color: #ccc;
     background-color: black;
     color-scheme: dark;
+}
+
+.toc {
+    margin: 0 -1rem;
+}
+
+.toc a {
+    text-decoration: none;
+    color: unset;
+    font-size: 0.8rem;
+    margin: 0.3rem 1rem;
+    display: inline-block;
+}
+
+.toc a:hover {
+    text-decoration: underline;
+}
+
+.toc-h1,
+.toc-h2 {
+    text-transform: uppercase;
+}
+
+.toc-h4,
+.toc-h5,
+.toc-h6 {
+    opacity: 0.6;
+}
+
+.top-nav {
+    position: absolute;
+    top: 0.25rem;
+    left: 0.5rem;
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0.25rem;
+    right: 0.5rem;
 }
