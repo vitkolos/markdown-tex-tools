@@ -86,7 +86,7 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
 function pagify(markdown, command, path) {
     const options = { throwOnError: false };
     const titleMatch = markdown.match(/^# (.*)/);
-    const title = (titleMatch && titleMatch.length == 2) ? titleMatch[1] : 'Markdown';
+    const title = (titleMatch && titleMatch.length == 2) ? processTitle(titleMatch[1]) : 'Markdown';
 
     const renderer = new marked.Renderer();
     const tocSlugger = new marked.Slugger();
@@ -122,7 +122,7 @@ function cardify(markdown, command, path) {
             const ll = getListLevel(line, indentation, listBullet);
 
             if (line.substring(0, 2) == '# ') {
-                title = line.substring(2);
+                title = processTitle(line.substring(2));
             } else if (line.substring(0, 3) == '## ') {
                 finishCard(currentCard, allCards);
                 currentCard = null;
@@ -255,6 +255,10 @@ function cardify(markdown, command, path) {
         const head = `<link rel="stylesheet" href="${staticRoute}/cards.css">`;
         return fillHtmlTemplate(body, title + ': kartičky', path, head);
     }
+}
+
+function processTitle(title) {
+    return title.replaceAll('\\', '');
 }
 
 function getListLevel(line, indentation, listBullet) {
