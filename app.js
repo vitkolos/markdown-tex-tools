@@ -8,7 +8,7 @@ const static = require('./static');
 
 const requestListener = function (req, res) {
     const stopwatchStart = performance.now();
-    const logFile = fs.createWriteStream(__dirname + '/debug.log', { flags: 'a' });
+    const logFile = fs.createWriteStream(__dirname + '/access.log', { flags: 'a' });
 
     // where the real path starts; e.g. /node/ = 1, /script/node/app/ = 3
     const pathOffset = 1;
