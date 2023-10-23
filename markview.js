@@ -2,6 +2,7 @@ const https = require('https');
 require('dotenv').config();
 const marked = require('marked');
 const marktex = require('./marktex');
+const { getHeadingList } = require('marked-gfm-heading-id');
 
 const repositories = {
     'notes-ipp': 'vitkolos/notes-ipp',
@@ -89,13 +90,10 @@ function pagify(markdown, command, path) {
     const title = (titleMatch && titleMatch.length == 2) ? processTitle(titleMatch[1]) : 'Markdown';
 
     const renderer = new marked.Renderer();
-    const tocSlugger = new marked.Slugger();
-    const toc = [];
-    prepareTocGenerator(renderer, toc, tocSlugger);
     const markedInstance = marktex.setupMarkedInstance(options, renderer);
     const body = marktex.processKatex(markedInstance, markdown);
 
-    return fillHtmlTemplate(placeToc(body, toc), title, path);
+    return fillHtmlTemplate(placeToc(body, getHeadingList()), title, path);
 }
 
 function cardify(markdown, command, path) {
@@ -320,7 +318,7 @@ function placeToc(pageHtml, toc) {
         return pageHtml;
     }
 
-    const tocHtml = `<div class="toc">${toc.map(h => `<a href="#${h.slug}" class="toc-h${h.level}">${h.raw}</a>`).join('')}</div>`;
+    const tocHtml = `<div class="toc">${toc.map(h => `<a href="#${h.id}" class="toc-h${h.level}">${h.text}</a>`).join('')}</div>`;
     return pageHtml.replace('</h1>', '</h1>' + tocHtml);
 }
 

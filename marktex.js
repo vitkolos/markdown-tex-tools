@@ -1,4 +1,5 @@
 const { Marked } = require('marked');
+const { gfmHeadingId } = require('marked-gfm-heading-id');
 const katex = require('katex');
 
 function markedKatex(options, renderer) {
@@ -70,6 +71,7 @@ function setupMarkedInstance(options = {}, renderer = null) {
 
     // marked.use is very error prone when used with global marked object as it adds more and more functions to run
     marked.use(markedKatex(options, renderer));
+    marked.use(gfmHeadingId());
     return marked;
 }
 
