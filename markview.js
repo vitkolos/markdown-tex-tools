@@ -194,7 +194,9 @@ function cardify(markdown, command, path) {
                     <button type="button" onclick="startRun(2);">≤ 2</button>
                     <button type="button" onclick="startRun(3);">≤ 3</button>
                     <button type="button" onclick="startRun(4);">všechny</button>
-                    <span class="filtersactive-wrapper"><input type="checkbox" id="filtersactive" onclick="toggleFilters();" /><label for="filtersactive">filtrovat</label></span>
+                    <span class="filtersactive-wrapper" ${(categories[0].length || categories[1].length) ? '' : 'style="display:none"'}>
+                        <input type="checkbox" id="filtersactive" onclick="toggleFilters();" /><label for="filtersactive">filtrovat</label>
+                    </span>
                 </div>
                 <div class="filters" id="filters">
                     ${categories.map((group, gIndex) => `<div>${group.map((category, cIndex) =>
