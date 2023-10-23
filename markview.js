@@ -92,7 +92,8 @@ function pagify(markdown, command, path) {
     const tocSlugger = new marked.Slugger();
     const toc = [];
     prepareTocGenerator(renderer, toc, tocSlugger);
-    const body = marktex.processKatex(markdown, options, renderer);
+    const markedInstance = marktex.setupMarkedInstance(options, renderer);
+    const body = marktex.processKatex(markedInstance, markdown);
 
     return fillHtmlTemplate(placeToc(body, toc), title, path);
 }
@@ -182,7 +183,6 @@ function cardify(markdown, command, path) {
             }
         }).join(cardSep);
     } else {
-        const options = { throwOnError: false };
         const staticRoute = '/' + path.path.slice(0, path.offset - 1).join('/') + '/static';
         let body = `
             <h1>${title}</h1>
@@ -215,6 +215,7 @@ function cardify(markdown, command, path) {
             <div id="stats" class="stats"></div>
         `;
 
+        const markedInstance = marktex.setupMarkedInstance({ throwOnError: false });
         allCards.forEach(card => {
             const desc = (card.descriptionLines.length == 1 && ulRegExp.test(card.descriptionLines[0]))
                 ? card.descriptionLines[0].substring(2) : card.descriptionLines.join('\n');
@@ -222,9 +223,9 @@ function cardify(markdown, command, path) {
                 <div id="${card.id}" class="card">
                     <div class="title" onclick="flip();">
                         <div class="categories">${card.categories[0] ? card.categories[0] : ''}</div>
-                        ${marktex.processKatex(card.title, options)}
+                        ${marktex.processKatex(markedInstance, card.title)}
                     </div>
-                    <div class="description">${marktex.processKatex(desc, options)}</div>
+                    <div class="description">${marktex.processKatex(markedInstance, desc)}</div>
                 </div>
             `;
         });

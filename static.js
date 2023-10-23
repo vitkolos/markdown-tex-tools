@@ -6,6 +6,7 @@ function getFile(urlParts, pathOffset, res) {
     const supportedExtensions = {
         js: 'application/javascript',
         css: 'text/css',
+        txt: 'text/plain'
     };
 
     if (extension in supportedExtensions) {

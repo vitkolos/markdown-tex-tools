@@ -1,4 +1,4 @@
-const marked = require('marked');
+const { Marked } = require('marked');
 const katex = require('katex');
 
 function markedKatex(options, renderer) {
@@ -61,11 +61,22 @@ function blockKatex(options) {
     };
 }
 
-function processKatex(markdown, options = {}, renderer = new marked.Renderer()) {
+function setupMarkedInstance(options = {}, renderer = null) {
+    const marked = new Marked();
+
+    if (renderer == null) {
+        renderer = new marked.Renderer();
+    }
+
+    // marked.use is very error prone when used with global marked object as it adds more and more functions to run
     marked.use(markedKatex(options, renderer));
-    return marked.parse(markdown);
+    return marked;
+}
+
+function processKatex(markedInstance, markdown) {
+    return markedInstance.parse(markdown);
 }
 
 module.exports = {
-    processKatex
+    setupMarkedInstance, processKatex
 };

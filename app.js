@@ -5,6 +5,7 @@ const http = require('http');
 const fs = require('fs');
 const markview = require('./markview');
 const static = require('./static');
+const runningRequests = [];
 
 const requestListener = function (req, res) {
     const stopwatchStart = performance.now();
@@ -14,6 +15,8 @@ const requestListener = function (req, res) {
     const pathOffset = 1;
     const urlWithoutQuery = req.url.replace(/\?.*$/, '');
     const urlParts = urlWithoutQuery.replace(/^\/|\/$/g, '').split('/');
+
+    runningRequests.push(urlWithoutQuery);
 
     switch (urlParts[pathOffset]) {
         case 'view':
@@ -41,9 +44,17 @@ const requestListener = function (req, res) {
             break;
     }
 
-    const stopwatchEnd = performance.now();
-    const date = new Date();
-    logFile.write(date.toISOString() + '\t' + urlWithoutQuery + '\t' + (stopwatchEnd - stopwatchStart) + '\t' + req.headers['user-agent'] + '\n');
+    res.on('finish', function () {
+        const index = runningRequests.indexOf(urlWithoutQuery);
+        
+        if (index !== -1) {
+            runningRequests.splice(index, 1);
+        }
+
+        const stopwatchEnd = performance.now();
+        const date = new Date();
+        logFile.write(date.toISOString() + '\t' + urlWithoutQuery + '\t' + (stopwatchEnd - stopwatchStart) + '\t' + req.headers['user-agent'] + '\t' + JSON.stringify(runningRequests) + '\n');
+    });
 }
 
 const server = http.createServer(requestListener);
