@@ -2,6 +2,14 @@ const { Marked } = require('marked');
 const { gfmHeadingId } = require('marked-gfm-heading-id');
 const katex = require('katex');
 
+const options = {
+    throwOnError: false,
+    macros: {
+        '\\min': '\\text{min}',
+        '\\max': '\\text{max}',
+    }
+};
+
 function markedKatex(options, renderer) {
     return {
         renderer,
@@ -80,5 +88,5 @@ function processKatex(markedInstance, markdown) {
 }
 
 module.exports = {
-    setupMarkedInstance, processKatex
+    setupMarkedInstance, processKatex, options
 };

@@ -85,12 +85,11 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
 }
 
 function pagify(markdown, command, path) {
-    const options = { throwOnError: false };
     const titleMatch = markdown.match(/^# (.*)/);
     const title = (titleMatch && titleMatch.length == 2) ? processTitle(titleMatch[1]) : 'Markdown';
 
     const renderer = new marked.Renderer();
-    const markedInstance = marktex.setupMarkedInstance(options, renderer);
+    const markedInstance = marktex.setupMarkedInstance(marktex.options, renderer);
     const body = marktex.processKatex(markedInstance, markdown);
 
     return fillHtmlTemplate(placeToc(body, getHeadingList()), title, path);
@@ -215,7 +214,7 @@ function cardify(markdown, command, path) {
             <div id="stats" class="stats"></div>
         `;
 
-        const markedInstance = marktex.setupMarkedInstance({ throwOnError: false });
+        const markedInstance = marktex.setupMarkedInstance(marktex.options);
         allCards.forEach(card => {
             const desc = (card.descriptionLines.length == 1 && ulRegExp.test(card.descriptionLines[0]))
                 ? card.descriptionLines[0].substring(2) : card.descriptionLines.join('\n');
