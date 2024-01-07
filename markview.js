@@ -230,7 +230,7 @@ function cardify(markdown, command, path) {
         });
 
         body += `
-            <div id="welldone" class="welldone">Hurá, máš hotovo! 🎉</div>
+            <div id="welldone" class="welldone">Hurá, máš hotovo! 🎉 <br>Pokud ti moje kartičky pomohly, můžeš mi <a href="https://revolut.me/vitkolos">koupit pivo</a>.</div>
             <div class="flipper" onclick="flip();"></div>
             <div id="controls" class="controls">
                 <div class="ctop">

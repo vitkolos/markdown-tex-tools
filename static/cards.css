@@ -245,6 +245,14 @@ input[type="checkbox"] {
     background-color: #f0f4c3;
 }
 
+.welldone a {
+    color: inherit;
+}
+
+[data-theme="dark"] .welldone {
+    background-color: #233113;
+}
+
 .card .title p {
     margin: 0;
 }
