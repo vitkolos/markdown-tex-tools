@@ -33,6 +33,11 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
+.bottom-nav {
+    /* hide the "top" link */
+    display: none;
+}
+
 /* show/hide */
 
 .card,
