@@ -92,7 +92,7 @@ function pagify(markdown, command, path) {
     const markedInstance = marktex.setupMarkedInstance(marktex.options, renderer);
     const body = marktex.processKatex(markedInstance, markdown);
 
-    return fillHtmlTemplate(placeToc(body, getHeadingList()), title, path);
+    return fillHtmlTemplate(placeToc(body, getHeadingList()), decorateTitle(title, path), path);
 }
 
 function cardify(markdown, command, path) {
@@ -253,12 +253,26 @@ function cardify(markdown, command, path) {
             <script src="${staticRoute}/cards.js"></script>
         `;
         const head = `<link rel="stylesheet" href="${staticRoute}/cards.css">`;
-        return fillHtmlTemplate(body, title + ': kartičky', path, head);
+        return fillHtmlTemplate(body, decorateTitle(title, path, true), path, head);
     }
 }
 
 function processTitle(title) {
     return title.replaceAll('\\', '');
+}
+
+function decorateTitle(title, path, cards = false) {
+    if (cards) {
+        title += ': kartičky';
+    }
+
+    const nonDirectoryItemsLength = 2; // repo + branch
+
+    if ((path.path.length - path.offset - nonDirectoryItemsLength) >= 2) {
+        return title + ' | ' + path.path.at(-2);
+    }
+
+    return title;
 }
 
 function getListLevel(line, indentation, listBullet) {

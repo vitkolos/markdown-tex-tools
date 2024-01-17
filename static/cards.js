@@ -133,6 +133,9 @@ function lsSet(name) {
         case 'selectedCategories':
             localStorage.setItem(lsPrefix + 'selectedCategories', JSON.stringify(selectedCategories));
             break;
+        case 'lastRun':
+            localStorage.setItem(lsPrefix + 'lastRun', new Date().toISOString());
+            break;
     }
 }
 
@@ -140,12 +143,14 @@ function cleanOldLS() {
     // removes localStorage items older than one year (according to the year in the date)
     for (const key in localStorage) {
         if (key.startsWith('cards_') && key.endsWith('_lastRun')) {
-            const thatYear = new Date(JSON.parse(localStorage.getItem(key))).getFullYear();
+            const thatYear = new Date(localStorage.getItem(key)).getFullYear();
             const thisYear = new Date().getFullYear();
 
             if (thatYear + 1 < thisYear) {
+                const keyPrefix = key.slice(0, -'_lastRun'.length);
+
                 for (const key2 in localStorage) {
-                    if (key2.startsWith(key.slice(0, -8))) {
+                    if (key2.startsWith(keyPrefix)) {
                         localStorage.removeItem(key2);
                     }
                 }
