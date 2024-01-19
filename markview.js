@@ -8,6 +8,13 @@ const repositories = {
     'notes-ipp': 'vitkolos/notes-ipp',
 };
 
+const rawContentTypes = {
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    png: 'image/png',
+    txt: 'text/plain; charset=utf-8'
+};
+
 function getView(originalPath, pathOffset, res) {
     loadGithubData(originalPath, pathOffset, res, pagify);
 }
@@ -51,13 +58,8 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
                 res2.on('end', () => {
                     const suffix = path.at(-1).split('.').at(-1);
 
-                    if (['png', 'jpg', 'jpeg'].includes(suffix)) {
-                        if (suffix == 'jpg') {
-                            res.writeHead(200, { 'Content-Type': 'image/jpeg' });
-                        } else {
-                            res.writeHead(200, { 'Content-Type': 'image/' + suffix });
-                        }
-
+                    if (suffix in rawContentTypes) {
+                        res.writeHead(200, { 'Content-Type': rawContentTypes[suffix] });
                         const content = Buffer.concat(data);
                         res.end(content);
                     } else {
