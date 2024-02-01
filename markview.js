@@ -12,7 +12,10 @@ const rawContentTypes = {
     jpeg: 'image/jpeg',
     jpg: 'image/jpeg',
     png: 'image/png',
-    txt: 'text/plain; charset=utf-8'
+    txt: 'text/plain; charset=utf-8',
+    csv: 'text/plain; charset=utf-8',
+    tsv: 'text/plain; charset=utf-8',
+    json: 'application/json; charset=utf-8',
 };
 
 function getView(originalPath, pathOffset, res) {
@@ -88,7 +91,8 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
 
 function pagify(markdown, command, path) {
     const titleMatch = markdown.match(/^# (.*)/);
-    const title = (titleMatch && titleMatch.length == 2) ? processTitle(titleMatch[1]) : 'Markdown';
+    const fallbackTitle = path.path.at(-1).replace(/\.md$/, '');
+    const title = (titleMatch && titleMatch.length == 2) ? processTitle(titleMatch[1]) : fallbackTitle;
 
     const renderer = new marked.Renderer();
     const markedInstance = marktex.setupMarkedInstance(marktex.options, renderer);
