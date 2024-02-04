@@ -5,6 +5,7 @@ const http = require('http');
 const fs = require('fs');
 const markview = require('./markview');
 const static = require('./static');
+const { notFound } = require('./notfound');
 const runningRequests = [];
 
 const requestListener = function (req, res) {
@@ -39,8 +40,7 @@ const requestListener = function (req, res) {
             break;
 
         default:
-            res.writeHead(404, { 'Content-Type': 'text/plain' });
-            res.end('page not found');
+            notFound(res, 'Mode not found');
             break;
     }
 

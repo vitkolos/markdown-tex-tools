@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { notFound } = require('./notfound');
 
 function getFile(urlParts, pathOffset, res) {
     const extension = urlParts[pathOffset].split('.').pop();
@@ -31,8 +32,7 @@ function getFile(urlParts, pathOffset, res) {
 }
 
 function fileNotFound(res) {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('404: File not found');
+    notFound(res, 'File not found');
 }
 
 module.exports = {

@@ -2,6 +2,7 @@ const https = require('https');
 require('dotenv').config();
 const marked = require('marked');
 const marktex = require('./marktex');
+const { notFound } = require('./notfound');
 const { getHeadingList } = require('marked-gfm-heading-id');
 
 const repositories = {
@@ -85,7 +86,7 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
             });
         }
     } else {
-        notFound(res);
+        notFound(res, 'Repository not found');
     }
 }
 
@@ -402,7 +403,7 @@ function showDirectoryStructure(originalPath, pathOffset, res) {
         let data = [];
 
         if (res2.statusCode != 200) {
-            notFound(res, 'not found :(');
+            notFound(res, 'Page does not exist');
             return;
         }
 
@@ -435,11 +436,6 @@ function showDirectoryStructure(originalPath, pathOffset, res) {
     }).on('error', err => {
         notFound(res, err.message);
     });
-}
-
-function notFound(res, err = 'page not found') {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end(err);
 }
 
 module.exports = {
