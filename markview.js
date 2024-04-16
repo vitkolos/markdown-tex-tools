@@ -316,23 +316,6 @@ function replaceAll(str, arr1, arr2) {
     });
 }
 
-function prepareTocGenerator(renderer, toc, tocSlugger) {
-    const r = {
-        heading: renderer.heading.bind(renderer),
-    };
-
-    renderer.heading = (text, level, raw, slugger) => {
-        toc.push({
-            level,
-            text, // with html tags
-            raw, // pure text (contains neither tags nor markdown)
-            slug: tocSlugger.slug(raw)
-        });
-
-        return r.heading(text, level, raw, slugger);
-    };
-}
-
 function placeToc(pageHtml, toc) {
     toc.shift(); // remove first h1
 
