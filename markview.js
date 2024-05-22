@@ -5,8 +5,13 @@ const marktex = require('./marktex');
 const { notFound } = require('./notfound');
 const { getHeadingList } = require('marked-gfm-heading-id');
 
+const indexKey = '_index';
 const repositories = {
     'notes-ipp': 'vitkolos/notes-ipp',
+    'grsc': {
+        '_index': 'https://grsc.cz/',
+        'site': 'https://mff.share.grsc.cz/site.md'
+    }
 };
 
 const rawContentTypes = {
@@ -32,9 +37,12 @@ function getCards(originalPath, pathOffset, res) {
 }
 
 function loadGithubData(originalPath, pathOffset, res, processor) {
+    const defaultBranch = 'main';
     let path = originalPath.slice(pathOffset);
 
     if (path[0] in repositories) {
+        const isGithub = typeof (repositories[path[0]]) == 'string';
+
         if (path[1] == 'blob') {
             path.splice(1, 1);
             res.writeHead(302, {
@@ -43,15 +51,32 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
             res.end();
         } else if (path.length == 1) {
             res.writeHead(302, {
-                'Location': '/' + originalPath.join('/') + '/main/'
+                'Location': isGithub
+                    ? ('/' + [...originalPath, defaultBranch].join('/') + '/')
+                    : repositories[path[0]][indexKey]
             });
             res.end();
         } else {
-            https.get('https://raw.githubusercontent.com/' + repositories[path[0]] + '/' + path.slice(1).join('/'), res2 => {
+            let url;
+
+            if (isGithub) {
+                url = 'https://raw.githubusercontent.com/' + repositories[path[0]] + '/' + path.slice(1).join('/');
+            } else if (path[1] != indexKey && path[1] in repositories[path[0]]) {
+                url = repositories[path[0]][path[1]];
+            } else {
+                notFound(res, 'Page not defined');
+                return;
+            }
+
+            https.get(url, res2 => {
                 let data = [];
 
                 if (res2.statusCode != 200) {
-                    showDirectoryStructure(originalPath, pathOffset, res);
+                    if (isGithub) {
+                        showDirectoryStructure(originalPath, pathOffset, res);
+                    } else {
+                        notFound(res, 'Page not found');
+                    }
                     return;
                 }
 
@@ -332,7 +357,7 @@ function fillHtmlTemplate(body, title, path, head = '') {
         const currentClass = link == path.path[path.offset - 1] ? ' class="current"' : '';
         return '<a href="/' + path.path.slice(0, path.offset - 1).join('/') + '/' + link + '/' + path.path.slice(path.offset).join('/') + '"' + currentClass + '>' + link + '</a>';
     });
-    const ghUrl = 'https://github.com/' + path.repo + '/blob/' + path.path.slice(path.offset + 1).join('/');
+    const ghUrl = typeof (path.repo) == 'string' ? 'https://github.com/' + path.repo + '/blob/' + path.path.slice(path.offset + 1).join('/') : null;
     const staticRoute = '/' + path.path.slice(0, path.offset - 1).join('/') + '/static';
 
     const matomo = `<!-- Matomo -->
@@ -368,7 +393,7 @@ function fillHtmlTemplate(body, title, path, head = '') {
     ${head}
 </head>
 <body>
-<small class="top-nav"><a href=".">this dir</a> | ${links.join(' | ')} | <a href="${ghUrl}">edit</a> | <a href="#" id="theme-toggle">dark</a></small>
+<small class="top-nav"><a href=".">this dir</a> | ${links.join(' | ')} | ${ghUrl ? `<a href="${ghUrl}">edit</a> | ` : ''}<a href="#" id="theme-toggle">dark</a></small>
 <small class="bottom-nav"><a href="#">top</a></small>
 ${body}
 </body>
