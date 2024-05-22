@@ -5,12 +5,10 @@ const marktex = require('./marktex');
 const { notFound } = require('./notfound');
 const { getHeadingList } = require('marked-gfm-heading-id');
 
-const indexKey = '_index';
 const repositories = {
     'notes-ipp': 'vitkolos/notes-ipp',
     'grsc': {
-        '_index': 'https://grsc.cz/',
-        'site': 'https://mff.share.grsc.cz/site.md'
+        'url': 'https://mff.share.grsc.cz',
     }
 };
 
@@ -53,7 +51,7 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
             res.writeHead(302, {
                 'Location': isGithub
                     ? ('/' + [...originalPath, defaultBranch].join('/') + '/')
-                    : repositories[path[0]][indexKey]
+                    : repositories[path[0]]['url']
             });
             res.end();
         } else {
@@ -61,11 +59,8 @@ function loadGithubData(originalPath, pathOffset, res, processor) {
 
             if (isGithub) {
                 url = 'https://raw.githubusercontent.com/' + repositories[path[0]] + '/' + path.slice(1).join('/');
-            } else if (path[1] != indexKey && path[1] in repositories[path[0]]) {
-                url = repositories[path[0]][path[1]];
             } else {
-                notFound(res, 'Page not defined');
-                return;
+                url = repositories[path[0]]['url'] + '/' + path.slice(1).join('/');
             }
 
             https.get(url, res2 => {
