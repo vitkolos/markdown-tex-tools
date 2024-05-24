@@ -9,6 +9,7 @@ const repositories = {
     'notes-ipp': 'vitkolos/notes-ipp',
     'grsc': {
         'url': 'https://mff.share.grsc.cz',
+        'beer': 'Dej si pauzu od učení a podepiš <a href="https://portal.gov.cz/e-petice/713-cisla-linky-na-leve-strane-vozidel-pid">tuhle cool petici</a>.',
     }
 };
 
@@ -123,6 +124,7 @@ function pagify(markdown, command, path) {
 }
 
 function cardify(markdown, command, path) {
+    const beer = (typeof (path.repo) == 'object' && 'beer' in path.repo) ? path.repo.beer : 'Pokud ti moje kartičky pomohly, můžeš mi <a href="https://revolut.me/vitkolos">koupit pivo</a>.';
     let title = '';
     let description = '';
     let descriptionOpen = true;
@@ -257,7 +259,7 @@ function cardify(markdown, command, path) {
         });
 
         body += `
-            <div id="welldone" class="welldone">Hurá, máš hotovo! 🎉 <br>Pokud ti moje kartičky pomohly, můžeš mi <a href="https://revolut.me/vitkolos">koupit pivo</a>.</div>
+            <div id="welldone" class="welldone">Hurá, máš hotovo! 🎉 <br>${beer}</div>
             <div class="flipper" onclick="flip();"></div>
             <div id="controls" class="controls">
                 <div class="ctop">
