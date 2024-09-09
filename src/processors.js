@@ -12,9 +12,7 @@ const list = {
 };
 
 function pagify(markdown, request) {
-    const titleMatch = markdown.match(/^# (.*)/);
-    const fallbackTitle = stringext.removeSuffix(request.filePathList.at(-1), '.md');
-    const title = (titleMatch && titleMatch.length == 2) ? processTitle(titleMatch[1]) : fallbackTitle;
+    const title = getTitle(markdown, request);
     const decoratedTitle = decorateTitle(title, request);
 
     const renderer = new marked.Renderer();
@@ -25,7 +23,7 @@ function pagify(markdown, request) {
 }
 
 function cardify(markdown, request) {
-    let title = '';
+    const title = getTitle(markdown, request);
     let description = '';
     let descriptionOpen = true;
     let currentHeading = '';
@@ -48,15 +46,15 @@ function cardify(markdown, request) {
         if (line != '') {
             const ll = getListLevel(line, indentation, listBullet);
 
-            if (line.substring(0, 2) == '# ') {
-                title = processTitle(line.substring(2));
-            } else if (line.substring(0, 3) == '## ') {
+            if (line.substring(0, 3) == '## ') {
                 finishCard(currentCard, allCards);
                 currentCard = null;
                 descriptionOpen = false;
 
                 currentHeading = line.substring(3);
                 categories[0].push(currentHeading);
+            } else if (line[0] == '#') {
+                // ignore line with heading
             } else if (ll == 0) {
                 finishCard(currentCard, allCards);
                 descriptionOpen = false;
@@ -188,8 +186,10 @@ function cardify(markdown, request) {
     }
 }
 
-function processTitle(title) {
-    return title.replaceAll('\\', '');
+function getTitle(markdown, request) {
+    const titleMatch = markdown.match(/^# (.*)/);
+    const fallbackTitle = stringext.removeSuffix(request.filePathList.at(-1), '.md');
+    return (titleMatch && titleMatch.length == 2) ? titleMatch[1].replaceAll('\\', '') : fallbackTitle;
 }
 
 function decorateTitle(title, request, cards = false) {

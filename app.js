@@ -6,7 +6,7 @@ const url = require('url');
 const path = require('path');
 const pp = path.posix;
 const fs = require('fs');
-const markview = require('./src/markview');
+const view = require('./src/view');
 const static = require('./src/static');
 const page = require('./src/page');
 const stringext = require('./src/stringext');
@@ -30,14 +30,14 @@ const requestListener = function (req, res) {
     switch (mode) {
         case 'view':
         case 'source':
-            markview.getView(request, res, mode);
+            view.getView(request, res, mode);
             break;
 
         case 'cards':
         case 'anki':
         case 'quizlet':
         case 'cards-json':
-            markview.getView(request, res, 'cards');
+            view.getView(request, res, 'cards');
             break;
 
         case 'static':

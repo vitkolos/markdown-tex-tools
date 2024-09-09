@@ -74,7 +74,7 @@ function initialize() {
                     }
                     break;
             }
-        } else if (currentRun !== undefined && event.code == 'ArrowLeft') {
+        } else if (currentRun !== undefined && ['ArrowLeft', 'KeyA', 'NumpadSubtract'].includes(event.code)) {
             previous();
         }
     });

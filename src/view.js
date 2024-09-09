@@ -120,7 +120,7 @@ function showDirectoryStructure(request, res) {
         const doubleDotAddress = request.filePath.length > 0 ? '..' : '/';
         var body = '<ul class="index">';
         body += `<li><a href="${doubleDotAddress}" class="dir">..</a></li>`;
-
+        
         items.forEach(item => {
             if (!item.name.startsWith('.')) {
                 const trailingSlash = item.type == 'dir' ? '/' : '';
