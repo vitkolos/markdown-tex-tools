@@ -1,5 +1,8 @@
+const path = require('path');
+const pp = path.posix;
 const marked = require('marked');
 const marktex = require('./marktex');
+const stringext = require('./stringext');
 const { getHeadingList } = require('marked-gfm-heading-id');
 
 const list = {
@@ -8,20 +11,22 @@ const list = {
     cards: cardify
 };
 
-function pagify(markdown, command, path) {
+function pagify(markdown, request) {
     const titleMatch = markdown.match(/^# (.*)/);
-    const fallbackTitle = path.path.at(-1).replace(/\.md$/, '');
+    const fallbackTitle = stringext.removeSuffix(request.filePathList.at(-1), '.md');
     const title = (titleMatch && titleMatch.length == 2) ? processTitle(titleMatch[1]) : fallbackTitle;
+    const decoratedTitle = decorateTitle(title, request);
 
     const renderer = new marked.Renderer();
     const markedInstance = marktex.setupMarkedInstance(marktex.options, renderer);
     const body = marktex.processKatex(markedInstance, markdown);
 
-    return fillHtmlTemplate(placeToc(body, getHeadingList()), decorateTitle(title, path), path);
+    return fillHtmlTemplate(placeToc(body, getHeadingList()), decoratedTitle, request);
 }
 
-function cardify(markdown, command, path) {
-    const beer = (typeof (path.repo) == 'object' && 'beer' in path.repo) ? path.repo.beer : 'Pokud ti moje kartičky pomohly, můžeš mi <a href="https://revolut.me/vitkolos">koupit pivo</a>.';
+function cardify(markdown, request) {
+    const repo = request.repository;
+    const beer = (typeof (repo) == 'object' && 'beer' in repo) ? repo.beer : 'Pokud ti moje kartičky pomohly, můžeš mi <a href="https://revolut.me/vitkolos">koupit pivo</a>.';
     let title = '';
     let description = '';
     let descriptionOpen = true;
@@ -90,13 +95,14 @@ function cardify(markdown, command, path) {
 
     finishCard(currentCard, allCards);
 
-    if (command == 'cards-json') {
+    if (request.mode == 'cards-json') {
         return JSON.stringify({ title, description, categories, cards: allCards });
-    } else if (command == 'anki' || command == 'quizlet') {
-        const titleSep = (command == 'anki') ? '; ' : ';';
-        const lineSep = (command == 'anki') ? '<br>' : '\n';
-        const cardSep = (command == 'anki') ? '\n' : '\n\n';
-        const separatorRemover = (command == 'anki') ? (text => text.replace(/;/g, ',')) : (text => text); // this fixes semicolons causing errors in anki
+    } else if (request.mode == 'anki' || request.mode == 'quizlet') {
+        const isAnki = request.mode == 'anki';
+        const titleSep = isAnki ? '; ' : ';';
+        const lineSep = isAnki ? '<br>' : '\n';
+        const cardSep = isAnki ? '\n' : '\n\n';
+        const separatorRemover = isAnki ? (text => text.replace(/;/g, ',')) : (text => text); // this fixes semicolons causing errors in anki
 
         return allCards.map(card => {
             if (card.descriptionLines.length == 1 && ulRegExp.test(card.descriptionLines[0])) {
@@ -106,7 +112,7 @@ function cardify(markdown, command, path) {
             }
         }).join(cardSep);
     } else {
-        const staticRoute = '/' + path.path.slice(0, path.offset - 1).join('/') + '/static';
+        const staticRoute = pp.join(request.prefix, 'static');
         let body = `
             <h1>${title}</h1>
             <div class="htbutton">
@@ -179,7 +185,8 @@ function cardify(markdown, command, path) {
             <script src="${staticRoute}/cards.js"></script>
         `;
         const head = `<link rel="stylesheet" href="${staticRoute}/cards.css">`;
-        return fillHtmlTemplate(body, decorateTitle(title, path, true), path, head);
+        const decoratedTitle = decorateTitle(title, request, true);
+        return fillHtmlTemplate(body, decoratedTitle, request, head);
     }
 }
 
@@ -187,18 +194,16 @@ function processTitle(title) {
     return title.replaceAll('\\', '');
 }
 
-function decorateTitle(title, path, cards = false) {
+function decorateTitle(title, request, cards = false) {
     if (cards) {
         title += ': kartičky';
     }
 
-    const nonDirectoryItemsLength = 2; // repo + branch
-
-    if ((path.path.length - path.offset - nonDirectoryItemsLength) >= 2) {
-        return title + ' | ' + path.path.at(-2);
+    if (request.filePathList.length >= 2) {
+        return title + ' | ' + request.filePathList.at(-2);
+    } else {
+        return title;
     }
-
-    return title;
 }
 
 function getListLevel(line, indentation, listBullet) {
@@ -246,13 +251,13 @@ function placeToc(pageHtml, toc) {
     return pageHtml.replace('</h1>', '</h1>' + tocHtml);
 }
 
-function fillHtmlTemplate(body, title, path, head = '') {
+function fillHtmlTemplate(body, title, request, head = '') {
     const links = ['view', 'cards', 'source'].map(link => {
-        const currentClass = link == path.path[path.offset - 1] ? ' class="current"' : '';
-        return '<a href="/' + path.path.slice(0, path.offset - 1).join('/') + '/' + link + '/' + path.path.slice(path.offset).join('/') + '"' + currentClass + '>' + link + '</a>';
+        const currentClass = link == request.mode ? 'class="current"' : '';
+        return `<a href="${pp.join(request.prefix, link, request.localPath)}" ${currentClass}>${link}</a>`;
     });
-    const ghUrl = typeof (path.repo) == 'string' ? 'https://github.com/' + path.repo + '/blob/' + path.path.slice(path.offset + 1).join('/') : null;
-    const staticRoute = '/' + path.path.slice(0, path.offset - 1).join('/') + '/static';
+    const ghUrl = typeof (request.repository) == 'string' ? 'https://github.com/' + request.repository + '/blob/' + pp.join(request.branch, request.filePath) : null;
+    const staticRoute = pp.join(request.prefix, 'static');
 
     const matomo = `<!-- Matomo -->
     <script>

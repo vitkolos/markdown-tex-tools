@@ -20,8 +20,6 @@ const requestListener = function (req, res) {
     const parsedUrl = url.parse(req.url);
 
     // where the real path starts; e.g. /node/ = 1, /script/node/app/ = 3
-    const pathOffset = 1;
-    const urlParts = parsedUrl.pathname.replace(sideSeps, '').split(pp.sep);
 
     const pathNoPrefix = stringext.removePrefix(parsedUrl.pathname, prefix + pp.sep);
     const [mode, localPath] = stringext.breakAt(pathNoPrefix, pp.sep);
@@ -30,22 +28,20 @@ const requestListener = function (req, res) {
         url: parsedUrl,
         prefix,
         mode,
-        localPath,
-        urlParts,
-        pathOffset
+        localPath
     };
 
     switch (mode) {
         case 'view':
         case 'source':
-            markview.getView(request, pathOffset + 1, res, mode);
+            markview.getView(request, res, mode);
             break;
 
         case 'cards':
         case 'anki':
         case 'quizlet':
         case 'cards-json':
-            markview.getView(request, pathOffset + 1, res, 'cards');
+            markview.getView(request, res, 'cards');
             break;
 
         case 'static':

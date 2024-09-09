@@ -25,8 +25,7 @@ const rawContentTypes = {
     html: 'text/html; charset=utf-8',
 };
 
-function getView(request, pathOffset, res, processorType) {
-    const originalPath = request.urlParts;
+function getView(request, res, processorType) {
     const defaultBranch = 'main';
     var repoSlug, filePath, branch = '';
     [repoSlug, filePath] = stringext.breakAt(request.localPath, pp.sep);
@@ -44,6 +43,9 @@ function getView(request, pathOffset, res, processorType) {
             request.filePath = filePath;
             request.filePathNoSlash = stringext.removeSuffix(request.filePath, '/');
         }
+
+        request.repository = repository;
+        request.filePathList = request.filePath.split(pp.sep);
 
         if (isGithub && branch == 'blob') {
             page.redirect(res, pp.join(request.prefix, request.mode, repoSlug, filePath));
@@ -83,14 +85,14 @@ function getView(request, pathOffset, res, processorType) {
                     }
 
                     const processor = processors.list[processorType];
-                    res.end(processor(content.toString(), request.mode, { path: originalPath, offset: pathOffset, repo: repository }));
+                    res.end(processor(content.toString(), request));
                 }
             }
 
             function failure(type, data) {
                 if (type == 'statusCode') {
                     if (isGithub) {
-                        showDirectoryStructure(request, originalPath, pathOffset, res);
+                        showDirectoryStructure(request, res);
                     } else {
                         page.notFound(res, 'Page not found');
                     }
@@ -104,11 +106,9 @@ function getView(request, pathOffset, res, processorType) {
     }
 }
 
-function showDirectoryStructure(request, originalPath, pathOffset, res) {
+function showDirectoryStructure(request, res) {
     // works only for github
-    const repository = repositories[request.repoSlug];
-    const apiUrl = 'https://vitkolos:' + process.env.GH_TOKEN + '@api.github.com/repos/' + repository + '/contents/' + request.filePathNoSlash + '?ref=' + request.branch;
-
+    const apiUrl = 'https://vitkolos:' + process.env.GH_TOKEN + '@api.github.com/repos/' + request.repository + '/contents/' + request.filePathNoSlash + '?ref=' + request.branch;
     downloader.getContent(apiUrl, { headers: { 'User-Agent': 'vitkolos' } }, success, failure);
 
     function success(content) {
@@ -118,13 +118,13 @@ function showDirectoryStructure(request, originalPath, pathOffset, res) {
         }
 
         const items = JSON.parse(content.toString());
-        const reversePath = request.filePath.split(pp.sep);
+        const reversePath = [...request.filePathList];
         reversePath.reverse();
         reversePath.push(request.repoSlug);
         reversePath.shift();
         const title = decodeURIComponent(reversePath.join(' | '));
         const doubleDotAddress = request.filePath.length > 0 ? '..' : '/';
-        let body = '<ul class="index">';
+        var body = '<ul class="index">';
         body += `<li><a href="${doubleDotAddress}" class="dir">..</a></li>`;
 
         items.forEach(item => {
@@ -137,7 +137,7 @@ function showDirectoryStructure(request, originalPath, pathOffset, res) {
 
         body += '</ul>';
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(processors.fillHtmlTemplate(body, title, { path: originalPath, offset: pathOffset, repo: repository }));
+        res.end(processors.fillHtmlTemplate(body, title, request));
     }
 
     function failure(type, data) {
