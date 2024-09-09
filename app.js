@@ -10,17 +10,13 @@ const markview = require('./src/markview');
 const static = require('./src/static');
 const page = require('./src/page');
 const stringext = require('./src/stringext');
-const sideSeps = new RegExp(`^${pp.sep}|${pp.sep}$`, 'g');
 
 const requestListener = function (req, res) {
     const stopwatchStart = performance.now();
     const logFile = fs.createWriteStream(__dirname + '/access.log', { flags: 'a' });
     
-    const prefix = '/node';
+    const prefix = process.env.PATH_PREFIX || '/';
     const parsedUrl = url.parse(req.url);
-
-    // where the real path starts; e.g. /node/ = 1, /script/node/app/ = 3
-
     const pathNoPrefix = stringext.removePrefix(parsedUrl.pathname, prefix + pp.sep);
     const [mode, localPath] = stringext.breakAt(pathNoPrefix, pp.sep);
     const request = {

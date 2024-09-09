@@ -25,8 +25,6 @@ function pagify(markdown, request) {
 }
 
 function cardify(markdown, request) {
-    const repo = request.repository;
-    const beer = (typeof (repo) == 'object' && 'beer' in repo) ? repo.beer : 'Pokud ti moje kartičky pomohly, můžeš mi <a href="https://revolut.me/vitkolos">koupit pivo</a>.';
     let title = '';
     let description = '';
     let descriptionOpen = true;
@@ -162,7 +160,7 @@ function cardify(markdown, request) {
         });
 
         body += `
-            <div id="welldone" class="welldone">Hurá, máš hotovo! 🎉 <br>${beer}</div>
+            <div id="welldone" class="welldone">Hurá, máš hotovo! 🎉 <br>${'beer' in request.repository ? request.repository.beer : ''}</div>
             <div class="flipper" onclick="flip();"></div>
             <div id="controls" class="controls">
                 <div class="ctop">
@@ -256,7 +254,7 @@ function fillHtmlTemplate(body, title, request, head = '') {
         const currentClass = link == request.mode ? 'class="current"' : '';
         return `<a href="${pp.join(request.prefix, link, request.localPath)}" ${currentClass}>${link}</a>`;
     });
-    const ghUrl = typeof (request.repository) == 'string' ? 'https://github.com/' + request.repository + '/blob/' + pp.join(request.branch, request.filePath) : null;
+    const ghLink = request.isGithub ? '<a href="https://github.com/' + pp.join(request.repository.github, 'blob', request.branch, request.filePath) + '">edit</a> | ' : '';
     const staticRoute = pp.join(request.prefix, 'static');
 
     const matomo = `<!-- Matomo -->
@@ -292,7 +290,7 @@ function fillHtmlTemplate(body, title, request, head = '') {
     ${head}
 </head>
 <body>
-<small class="top-nav"><a href=".">this dir</a> | ${links.join(' | ')} | ${ghUrl ? `<a href="${ghUrl}">edit</a> | ` : ''}<a href="#" id="theme-toggle">dark</a></small>
+<small class="top-nav"><a href=".">this dir</a> | ${links.join(' | ')} | ${ghLink}<a href="#" id="theme-toggle">dark</a></small>
 <small class="bottom-nav"><a href="#">top</a></small>
 ${body}
 </body>

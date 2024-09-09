@@ -5,14 +5,7 @@ const page = require('./page');
 const processors = require('./processors');
 const stringext = require('./stringext');
 const downloader = require('./downloader');
-
-const repositories = {
-    'notes-ipp': 'vitkolos/notes-ipp',
-    'grsc': {
-        'url': 'https://mff.share.grsc.cz/',
-        'beer': 'Dej si pauzu od učení a podepiš <a href="https://portal.gov.cz/e-petice/713-cisla-linky-na-leve-strane-vozidel-pid">tuhle cool petici</a>.',
-    }
-};
+const repositories = require('../repositories.json');
 
 const rawContentTypes = {
     jpeg: 'image/jpeg',
@@ -35,7 +28,7 @@ function getView(request, res, processorType) {
 
     if (repoSlug in repositories) {
         const repository = repositories[repoSlug];
-        const isGithub = typeof (repository) == 'string';
+        const isGithub = 'github' in repository;
 
         if (isGithub) {
             [branch, filePath] = stringext.breakAt(filePath, pp.sep);
@@ -44,6 +37,7 @@ function getView(request, res, processorType) {
             request.filePathNoSlash = stringext.removeSuffix(request.filePath, '/');
         }
 
+        request.isGithub = isGithub;
         request.repository = repository;
         request.filePathList = request.filePath.split(pp.sep);
 
@@ -52,14 +46,14 @@ function getView(request, res, processorType) {
         } else if (isGithub && branch == '') {
             page.redirect(res, pp.join(request.prefix, request.mode, repoSlug, defaultBranch, pp.sep));
         } else if (!isGithub && filePath == '') {
-            page.redirect(res, repository['url']);
+            page.redirect(res, repository.url);
         } else {
             var url;
 
             if (isGithub) {
-                url = 'https://raw.githubusercontent.com/' + pp.join(repository, branch, request.filePathNoSlash);
+                url = 'https://raw.githubusercontent.com/' + pp.join(repository.github, branch, request.filePathNoSlash);
             } else {
-                url = repository['url'] + filePath;
+                url = repository.url + filePath;
             }
 
             downloader.getContent(url, {}, success, failure);
@@ -108,7 +102,7 @@ function getView(request, res, processorType) {
 
 function showDirectoryStructure(request, res) {
     // works only for github
-    const apiUrl = 'https://vitkolos:' + process.env.GH_TOKEN + '@api.github.com/repos/' + request.repository + '/contents/' + request.filePathNoSlash + '?ref=' + request.branch;
+    const apiUrl = 'https://vitkolos:' + process.env.GH_TOKEN + '@api.github.com/repos/' + request.repository.github + '/contents/' + request.filePathNoSlash + '?ref=' + request.branch;
     downloader.getContent(apiUrl, { headers: { 'User-Agent': 'vitkolos' } }, success, failure);
 
     function success(content) {
