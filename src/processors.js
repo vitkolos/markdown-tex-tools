@@ -295,7 +295,4 @@ ${body}
 `;
 }
 
-module.exports = {
-    list,
-    fillHtmlTemplate
-};
+module.exports = { list, fillHtmlTemplate };

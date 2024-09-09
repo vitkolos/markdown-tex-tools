@@ -4,27 +4,33 @@
 const http = require('http');
 const url = require('url');
 const path = require('path');
+const pp = path.posix;
 const fs = require('fs');
 const markview = require('./src/markview');
 const static = require('./src/static');
-const { notFound } = require('./src/notfound');
-const sideSeps = new RegExp(`^${path.sep}|${path.sep}$`, 'g');
+const page = require('./src/page');
+const stringext = require('./src/stringext');
+const sideSeps = new RegExp(`^${pp.sep}|${pp.sep}$`, 'g');
 
 const requestListener = function (req, res) {
     const stopwatchStart = performance.now();
     const logFile = fs.createWriteStream(__dirname + '/access.log', { flags: 'a' });
+    
+    const prefix = '/node';
+    const parsedUrl = url.parse(req.url);
 
     // where the real path starts; e.g. /node/ = 1, /script/node/app/ = 3
     const pathOffset = 1;
-    const parsedUrl = url.parse(req.url);
-    const urlParts = parsedUrl.pathname.replace(sideSeps, '').split(path.sep);
-    const mode = urlParts[pathOffset];
+    const urlParts = parsedUrl.pathname.replace(sideSeps, '').split(pp.sep);
+
+    const pathNoPrefix = stringext.removePrefix(parsedUrl.pathname, prefix + pp.sep);
+    const [mode, localPath] = stringext.breakAt(pathNoPrefix, pp.sep);
     const request = {
         req,
         url: parsedUrl,
-        prefix: path.sep + urlParts.slice(0, pathOffset).join(path.sep),
+        prefix,
         mode,
-        localPath: urlParts.slice(pathOffset + 1).join(path.sep),
+        localPath,
         urlParts,
         pathOffset
     };
@@ -47,7 +53,7 @@ const requestListener = function (req, res) {
             break;
 
         default:
-            notFound(res, 'Mode not found');
+            page.notFound(res, 'Mode not found');
             break;
     }
 

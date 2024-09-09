@@ -1,20 +1,21 @@
 const fs = require('fs');
 const path = require('path');
-const { notFound } = require('./notfound');
-const { redirect } = require('./redirect');
+const pp = path.posix;
+const page = require('./page');
+const stringext = require('./stringext');
 
 function getFile(request, res) {
-    const extension = path.extname(request.localPath).replace(/^\./, '');
+    const extension = stringext.removePrefix(pp.extname(request.localPath), '.');
     const supportedExtensions = {
         js: 'application/javascript',
         css: 'text/css',
         txt: 'text/plain'
     };
 
-    if (request.url.pathname.endsWith('/')) {
-        redirect(res, request.url.pathname.slice(0, -1));
+    if (request.url.pathname.endsWith(pp.sep)) {
+        page.redirect(res, request.url.pathname.slice(0, -1));
     } else if (extension in supportedExtensions) {
-        fs.readFile('./static/' + request.localPath, (err, data) => {
+        fs.readFile(path.join('static', request.localPath), (err, data) => {
             if (err) {
                 fileNotFound(res);
             } else {
@@ -35,9 +36,7 @@ function getFile(request, res) {
 }
 
 function fileNotFound(res) {
-    notFound(res, 'File not found');
+    page.notFound(res, 'File not found');
 }
 
-module.exports = {
-    getFile
-};
+module.exports = { getFile };

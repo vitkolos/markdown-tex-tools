@@ -1,12 +1,15 @@
-const https = require('https');
+const path = require('path');
+const pp = path.posix;
 require('dotenv').config();
-const { notFound } = require('./notfound');
+const page = require('./page');
 const processors = require('./processors');
+const stringext = require('./stringext');
+const downloader = require('./downloader');
 
 const repositories = {
     'notes-ipp': 'vitkolos/notes-ipp',
     'grsc': {
-        'url': 'https://mff.share.grsc.cz',
+        'url': 'https://mff.share.grsc.cz/',
         'beer': 'Dej si pauzu od učení a podepiš <a href="https://portal.gov.cz/e-petice/713-cisla-linky-na-leve-strane-vozidel-pid">tuhle cool petici</a>.',
     }
 };
@@ -19,132 +22,131 @@ const rawContentTypes = {
     csv: 'text/plain; charset=utf-8',
     tsv: 'text/plain; charset=utf-8',
     json: 'application/json; charset=utf-8',
+    html: 'text/html; charset=utf-8',
 };
 
 function getView(request, pathOffset, res, processorType) {
     const originalPath = request.urlParts;
     const defaultBranch = 'main';
-    let path = originalPath.slice(pathOffset);
+    var repoSlug, filePath, branch = '';
+    [repoSlug, filePath] = stringext.breakAt(request.localPath, pp.sep);
+    request.repoSlug = repoSlug;
+    request.filePath = filePath;
+    request.branch = '';
 
-    if (path[0] in repositories) {
-        const repository = repositories[path[0]];
+    if (repoSlug in repositories) {
+        const repository = repositories[repoSlug];
         const isGithub = typeof (repository) == 'string';
 
-        if (path[1] == 'blob') {
-            path.splice(1, 1);
-            res.writeHead(302, {
-                'Location': '/' + originalPath.slice(0, pathOffset).join('/') + '/' + path.join('/')
-            });
-            res.end();
-        } else if (path.length == 1) {
-            res.writeHead(302, {
-                'Location': isGithub
-                    ? ('/' + [...originalPath, defaultBranch].join('/') + '/')
-                    : repository['url']
-            });
-            res.end();
+        if (isGithub) {
+            [branch, filePath] = stringext.breakAt(filePath, pp.sep);
+            request.branch = branch;
+            request.filePath = filePath;
+            request.filePathNoSlash = stringext.removeSuffix(request.filePath, '/');
+        }
+
+        if (isGithub && branch == 'blob') {
+            page.redirect(res, pp.join(request.prefix, request.mode, repoSlug, filePath));
+        } else if (isGithub && branch == '') {
+            page.redirect(res, pp.join(request.prefix, request.mode, repoSlug, defaultBranch, pp.sep));
+        } else if (!isGithub && filePath == '') {
+            page.redirect(res, repository['url']);
         } else {
-            let url;
+            var url;
 
             if (isGithub) {
-                url = 'https://raw.githubusercontent.com/' + repository + '/' + path.slice(1).join('/');
+                url = 'https://raw.githubusercontent.com/' + pp.join(repository, branch, request.filePathNoSlash);
             } else {
-                url = repository['url'] + '/' + path.slice(1).join('/');
+                url = repository['url'] + filePath;
             }
 
-            https.get(url, res2 => {
-                let data = [];
+            downloader.getContent(url, {}, success, failure);
 
-                if (res2.statusCode != 200) {
-                    if (isGithub) {
-                        showDirectoryStructure(originalPath, pathOffset, res);
-                    } else {
-                        notFound(res, 'Page not found');
-                    }
+            function success(content) {
+                if (isGithub && filePath.endsWith(pp.sep)) {
+                    page.redirect(res, pp.join(request.prefix, request.mode, request.repoSlug, request.branch, request.filePathNoSlash));
                     return;
                 }
 
-                res2.on('data', chunk => {
-                    data.push(chunk);
-                });
+                const extension = stringext.removePrefix(pp.extname(filePath), '.');
 
-                res2.on('end', () => {
-                    const suffix = path.at(-1).split('.').at(-1);
-
-                    if (suffix in rawContentTypes) {
-                        res.writeHead(200, { 'Content-Type': rawContentTypes[suffix] });
-                        const content = Buffer.concat(data);
-                        res.end(content);
+                if (extension in rawContentTypes) {
+                    res.writeHead(200, { 'Content-Type': rawContentTypes[extension] });
+                    res.end(content);
+                } else {
+                    if (request.mode == 'cards-json') {
+                        res.writeHead(200, { 'Content-Type': rawContentTypes.json });
+                    } else if (['anki', 'quizlet', 'source'].includes(request.mode)) {
+                        res.writeHead(200, { 'Content-Type': rawContentTypes.txt });
                     } else {
-                        const command = originalPath[pathOffset - 1];
-
-                        if (command == 'cards-json') {
-                            res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                        } else if (command == 'anki' || command == 'quizlet' || command == 'source') {
-                            res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-                        } else {
-                            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-                        }
-
-                        const content = Buffer.concat(data).toString();
-                        const processor = processors.list[processorType];
-                        res.end(processor(content, command, { path: originalPath, offset: pathOffset, repo: repository }));
+                        res.writeHead(200, { 'Content-Type': rawContentTypes.html });
                     }
-                });
-            }).on('error', err => {
-                notFound(res, err.message);
-            });
+
+                    const processor = processors.list[processorType];
+                    res.end(processor(content.toString(), request.mode, { path: originalPath, offset: pathOffset, repo: repository }));
+                }
+            }
+
+            function failure(type, data) {
+                if (type == 'statusCode') {
+                    if (isGithub) {
+                        showDirectoryStructure(request, originalPath, pathOffset, res);
+                    } else {
+                        page.notFound(res, 'Page not found');
+                    }
+                } else if (type == 'error') {
+                    page.notFound(res, data.message);
+                }
+            }
         }
     } else {
-        notFound(res, 'Repository not found');
+        page.notFound(res, 'Repository not found');
     }
 }
 
-function showDirectoryStructure(originalPath, pathOffset, res) {
-    const repositorySlug = originalPath[pathOffset];
-    const branch = originalPath[pathOffset + 1];
-    const pathInRepo = originalPath.slice(pathOffset + 2).join('/');
-    const apiUrl = 'https://vitkolos:' + process.env.GH_TOKEN + '@api.github.com/repos/' + repositories[repositorySlug] + '/contents/' + pathInRepo + '?ref=' + branch;
+function showDirectoryStructure(request, originalPath, pathOffset, res) {
+    // works only for github
+    const repository = repositories[request.repoSlug];
+    const apiUrl = 'https://vitkolos:' + process.env.GH_TOKEN + '@api.github.com/repos/' + repository + '/contents/' + request.filePathNoSlash + '?ref=' + request.branch;
 
-    https.get(apiUrl, { headers: { 'User-Agent': 'vitkolos' } }, res2 => {
-        let data = [];
+    downloader.getContent(apiUrl, { headers: { 'User-Agent': 'vitkolos' } }, success, failure);
 
-        if (res2.statusCode != 200) {
-            notFound(res, 'Page does not exist');
+    function success(content) {
+        if (!request.localPath.endsWith(pp.sep)) {
+            page.redirect(res, pp.join(request.prefix, request.mode, request.repoSlug, request.branch, request.filePath, pp.sep));
             return;
         }
 
-        res2.on('data', chunk => {
-            data.push(chunk);
+        const items = JSON.parse(content.toString());
+        const reversePath = request.filePath.split(pp.sep);
+        reversePath.reverse();
+        reversePath.push(request.repoSlug);
+        reversePath.shift();
+        const title = decodeURIComponent(reversePath.join(' | '));
+        const doubleDotAddress = request.filePath.length > 0 ? '..' : '/';
+        let body = '<ul class="index">';
+        body += `<li><a href="${doubleDotAddress}" class="dir">..</a></li>`;
+
+        items.forEach(item => {
+            if (!item.name.startsWith('.')) {
+                const trailingSlash = item.type == 'dir' ? '/' : '';
+                const currentPath = pp.join(request.prefix, request.mode, request.repoSlug, request.branch, item.path, trailingSlash);
+                body += `<li><a href="${currentPath}" class="${item.type}">${item.name}</a></li>`;
+            }
         });
 
-        res2.on('end', () => {
-            const content = Buffer.concat(data).toString();
-            const items = JSON.parse(content);
-            let reversePath = originalPath.slice(pathOffset + 2);
-            reversePath.reverse();
-            reversePath.push(repositorySlug);
-            const title = decodeURIComponent(reversePath.join(' | '));
-            const doubleDotAddress = pathInRepo.length ? ('/' + originalPath.slice(0, -1).join('/') + '/') : '/';
-            let body = '<ul class="index">';
-            body += `<li><a href="${doubleDotAddress}" class="dir">..</a></li>`;
+        body += '</ul>';
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(processors.fillHtmlTemplate(body, title, { path: originalPath, offset: pathOffset, repo: repository }));
+    }
 
-            items.forEach(item => {
-                if (!item.name.startsWith('.')) {
-                    let currentPath = '/' + originalPath.slice(0, pathOffset + 2).join('/') + '/' + item.path + (item.type == 'dir' ? '/' : '');
-                    body += `<li><a href="${currentPath}" class="${item.type}">${item.name}</a></li>`;
-                }
-            });
-
-            body += '</ul>';
-            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-            res.end(processors.fillHtmlTemplate(body, title, { path: originalPath, offset: pathOffset, repo: repositories[repositorySlug] }));
-        });
-    }).on('error', err => {
-        notFound(res, err.message);
-    });
+    function failure(type, data) {
+        if (type == 'statusCode') {
+            page.notFound(res, 'Page does not exist');
+        } else if (type == 'error') {
+            page.notFound(res, data.message);
+        }
+    }
 }
 
-module.exports = {
-    getView
-};
+module.exports = { getView };

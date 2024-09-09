@@ -1,3 +1,10 @@
+function redirect(res, location, code = 302) {
+    res.writeHead(302, {
+        'Location': location
+    });
+    res.end();
+}
+
 function notFound(res, errorText = 'Page not found') {
     const plain = false;
 
@@ -25,6 +32,4 @@ function notFound(res, errorText = 'Page not found') {
     }
 }
 
-module.exports = {
-    notFound
-};
+module.exports = { notFound, redirect };
