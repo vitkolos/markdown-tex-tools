@@ -2,11 +2,13 @@
 // debugging: docker logs node
 
 const http = require('http');
+const url = require('url');
+const path = require('path');
 const fs = require('fs');
-const markview = require('./markview');
-const static = require('./static');
-const { notFound } = require('./notfound');
-const runningRequests = [];
+const markview = require('./src/markview');
+const static = require('./src/static');
+const { notFound } = require('./src/notfound');
+const sideSeps = new RegExp(`^${path.sep}|${path.sep}$`, 'g');
 
 const requestListener = function (req, res) {
     const stopwatchStart = performance.now();
@@ -14,29 +16,34 @@ const requestListener = function (req, res) {
 
     // where the real path starts; e.g. /node/ = 1, /script/node/app/ = 3
     const pathOffset = 1;
-    const urlWithoutQuery = req.url.replace(/\?.*$/, '');
-    const urlParts = urlWithoutQuery.replace(/^\/|\/$/g, '').split('/');
+    const parsedUrl = url.parse(req.url);
+    const urlParts = parsedUrl.pathname.replace(sideSeps, '').split(path.sep);
+    const mode = urlParts[pathOffset];
+    const request = {
+        req,
+        url: parsedUrl,
+        prefix: path.sep + urlParts.slice(0, pathOffset).join(path.sep),
+        mode,
+        localPath: urlParts.slice(pathOffset + 1).join(path.sep),
+        urlParts,
+        pathOffset
+    };
 
-    runningRequests.push(urlWithoutQuery);
-
-    switch (urlParts[pathOffset]) {
+    switch (mode) {
         case 'view':
-            markview.getView(urlParts, pathOffset + 1, res);
-            break;
-
         case 'source':
-            markview.getSource(urlParts, pathOffset + 1, res);
+            markview.getView(request, pathOffset + 1, res, mode);
             break;
 
         case 'cards':
         case 'anki':
         case 'quizlet':
         case 'cards-json':
-            markview.getCards(urlParts, pathOffset + 1, res);
+            markview.getView(request, pathOffset + 1, res, 'cards');
             break;
 
         case 'static':
-            static.getFile(urlParts, pathOffset + 1, res);
+            static.getFile(request, res);
             break;
 
         default:
@@ -45,15 +52,10 @@ const requestListener = function (req, res) {
     }
 
     res.on('finish', function () {
-        const index = runningRequests.indexOf(urlWithoutQuery);
-        
-        if (index !== -1) {
-            runningRequests.splice(index, 1);
-        }
-
         const stopwatchEnd = performance.now();
         const date = new Date();
-        logFile.write(date.toISOString() + '\t' + urlWithoutQuery + '\t' + (stopwatchEnd - stopwatchStart) + '\t' + req.headers['user-agent'] + '\t' + JSON.stringify(runningRequests) + '\n');
+        logFile.write(date.toISOString() + '\t' + req.url + '\t' + (stopwatchEnd - stopwatchStart) + '\t' + req.headers['user-agent'] + '\n');
+        logFile.end();
     });
 }
 
