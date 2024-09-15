@@ -1,5 +1,6 @@
 const https = require('https');
 const redis = require('redis');
+const hash = require('object-hash');
 
 const keyPrefix = 'mdtex';
 var redisClient;
@@ -14,25 +15,27 @@ function setupRedis() {
     }
 }
 
-function getKey(type, url) {
-    return [keyPrefix, type, url].join('_');
+function getKey(requestIdentifier) {
+    const { type, url, options } = requestIdentifier;
+    const optionsHash = hash(options);
+    return [keyPrefix, type, url, optionsHash].join('_');
 }
 
-async function cacheRead(type, url, isBuffer = false) {
+async function cacheRead(requestIdentifier, isBuffer = false) {
     if (redisClient) {
         try {
-            const options = redis.commandOptions({ returnBuffers: isBuffer });
-            return await redisClient.get(options, getKey(type, url));
+            const cmdOpts = redis.commandOptions({ returnBuffers: isBuffer });
+            return await redisClient.get(cmdOpts, getKey(requestIdentifier));
         } catch (e) {
             console.error('cache read error', e);
         }
     }
 }
 
-function cacheWrite(type, url, data) {
+function cacheWrite(requestIdentifier, data) {
     if (redisClient) {
         try {
-            redisClient.set(getKey(type, url), data, {
+            redisClient.set(getKey(requestIdentifier), data, {
                 EX: 10 // keep for 10 seconds
             });
         } catch (e) {
@@ -42,14 +45,14 @@ function cacheWrite(type, url, data) {
 }
 
 async function getContent(url, options, success, failure) {
-    const cachedData = await cacheRead('fileContent', url, isBuffer = true);
+    const cachedData = await cacheRead({ type: 'fileContent', url, options }, isBuffer = true);
 
     if (cachedData) {
         console.log(url, 'found in cache');
         success(cachedData);
         return;
     } else {
-        const badStatusCode = await cacheRead('badStatusCode', url);
+        const badStatusCode = await cacheRead({ type: 'badStatusCode', url, options });
 
         if (badStatusCode) {
             console.log(url, 'is error');
@@ -64,7 +67,7 @@ async function getContent(url, options, success, failure) {
         const data = [];
 
         if (res.statusCode != 200) {
-            cacheWrite('badStatusCode', url, res.statusCode);
+            cacheWrite({ type: 'badStatusCode', url, options }, res.statusCode);
             failure('statusCode', res.statusCode);
             return;
         }
@@ -75,7 +78,7 @@ async function getContent(url, options, success, failure) {
 
         res.on('end', () => {
             const result = Buffer.concat(data);
-            cacheWrite('fileContent', url, result);
+            cacheWrite({ type: 'fileContent', url, options }, result);
             success(result);
         });
     }).on('error', err => {
