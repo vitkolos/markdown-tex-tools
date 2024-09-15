@@ -8,13 +8,14 @@ const pp = path.posix;
 const fs = require('fs');
 const view = require('./src/view');
 const static = require('./src/static');
+const downloader = require('./src/downloader');
 const page = require('./src/page');
 const stringext = require('./src/stringext');
 
 const requestListener = function (req, res) {
     const stopwatchStart = performance.now();
     const logFile = fs.createWriteStream(__dirname + '/access.log', { flags: 'a' });
-    
+
     const prefix = process.env.PATH_PREFIX || '/';
     const parsedUrl = url.parse(req.url);
     const pathNoPrefix = stringext.removePrefix(parsedUrl.pathname, prefix + pp.sep);
@@ -57,5 +58,6 @@ const requestListener = function (req, res) {
     });
 }
 
+downloader.setupRedis();
 const server = http.createServer(requestListener);
 server.listen(8080);
