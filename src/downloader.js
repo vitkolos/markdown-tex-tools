@@ -36,7 +36,7 @@ function cacheWrite(requestIdentifier, data) {
     if (redisClient) {
         try {
             redisClient.set(getKey(requestIdentifier), data, {
-                EX: 10 // keep for 10 seconds
+                EX: 300 // keep for 5 minutes
             });
         } catch (e) {
             console.error('cache write error', e);
@@ -48,27 +48,23 @@ async function getContent(url, options, success, failure) {
     const cachedData = await cacheRead({ type: 'fileContent', url, options }, isBuffer = true);
 
     if (cachedData) {
-        console.log(url, 'found in cache');
         success(cachedData);
         return;
     } else {
         const badStatusCode = await cacheRead({ type: 'badStatusCode', url, options });
 
         if (badStatusCode) {
-            console.log(url, 'is error');
             failure('statusCode', badStatusCode);
             return;
         }
-
-        console.log(url, 'fetched');
     }
 
     https.get(url, options, res => {
         const data = [];
 
         if (res.statusCode != 200) {
-            cacheWrite({ type: 'badStatusCode', url, options }, res.statusCode);
             failure('statusCode', res.statusCode);
+            cacheWrite({ type: 'badStatusCode', url, options }, res.statusCode);
             return;
         }
 
@@ -78,8 +74,8 @@ async function getContent(url, options, success, failure) {
 
         res.on('end', () => {
             const result = Buffer.concat(data);
-            cacheWrite({ type: 'fileContent', url, options }, result);
             success(result);
+            cacheWrite({ type: 'fileContent', url, options }, result);
         });
     }).on('error', err => {
         console.error('http error', err);
