@@ -7,7 +7,7 @@ var redisClient;
 function setupRedis() {
     redisClient = redis.createClient({ url: process.env.REDIS_URL });
     redisClient.on('error', (e) => {
-        console.error('Redis Error', e);
+        console.error('redis error', e);
     });
     redisClient.connect();
 }
@@ -36,7 +36,7 @@ function cacheWrite(type, url, data) {
 }
 
 async function getContent(url, options, success, failure) {
-    const cachedData = await cacheRead('fileContent', url);
+    const cachedData = await cacheRead('fileContent', url, isBuffer = true);
 
     if (cachedData) {
         console.log(url, 'found in cache');
@@ -73,6 +73,7 @@ async function getContent(url, options, success, failure) {
             success(result);
         });
     }).on('error', err => {
+        console.error('http error', err);
         failure('error', err);
     });
 }
