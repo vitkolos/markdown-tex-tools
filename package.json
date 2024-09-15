@@ -1,8 +1,28 @@
 {
+  "name": "markdown-tex-tools",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "nodemon": "nodemon -r dotenv/config app.js",
+    "pm2": "pm2-runtime ecosystem.config.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitkolos/markdown-tex-tools.git"
+  },
+  "author": "Vít Kološ",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vitkolos/markdown-tex-tools/issues"
+  },
+  "homepage": "https://github.com/vitkolos/markdown-tex-tools#readme",
+  "description": "",
   "dependencies": {
     "dotenv": "^16.0.3",
     "katex": "^0.16.4",
     "marked": "^9.1.2",
-    "marked-gfm-heading-id": "^3.1.0"
+    "marked-gfm-heading-id": "^3.1.0",
+    "redis": "^4.7.0"
   }
 }
