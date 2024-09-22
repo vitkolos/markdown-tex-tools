@@ -45,7 +45,7 @@ function cacheWrite(requestIdentifier, data) {
 }
 
 async function getContent(url, options, success, failure) {
-    const cachedData = await cacheRead({ type: 'fileContent', url, options }, isBuffer = true);
+    const cachedData = await cacheRead({ type: 'fileContent', url, options }, true);
 
     if (cachedData) {
         success(cachedData);

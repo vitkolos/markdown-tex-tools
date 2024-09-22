@@ -87,7 +87,7 @@ function getView(request, res, processorType, rawMode = false) {
                     } else if (jsonData.type == 'file' && jsonData.content == '' && jsonData.encoding == 'none') {
                         // file is larger than 1 MB (and smaller than 100 MB)
                         // see https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content
-                        getView(request, res, processorType, rawMode = true);
+                        getView(request, res, processorType, true);
                         return;
                     } else {
                         page.notFound(res, 'Something went wrong');
