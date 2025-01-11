@@ -11,6 +11,7 @@ const rawContentTypes = {
     jpeg: 'image/jpeg',
     jpg: 'image/jpeg',
     png: 'image/png',
+    svg: 'image/svg+xml',
     txt: 'text/plain; charset=utf-8',
     csv: 'text/plain; charset=utf-8',
     tsv: 'text/plain; charset=utf-8',
