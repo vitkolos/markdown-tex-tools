@@ -98,6 +98,7 @@ function someInitialCalls() {
         currentCard = lastCards[lcPointer];
     }
 
+    deleteRemovedCards();
     generateCardsToVisit();
     showCurrentCard();
     updateStats();
@@ -107,6 +108,18 @@ function someInitialCalls() {
 }
 
 // localStorage stuff
+
+function deleteRemovedCards() {
+    if (cardIds.length > 1) {
+        for (const card in visitedCards) {
+            if (!cardIds.includes(card)) {
+                delete visitedCards[card];
+            }
+        }
+
+        lsSet('visitedCards');
+    }
+}
 
 function saveCurrentState() {
     lsSet('currentRun');
@@ -291,7 +304,7 @@ function pickRandomCard() {
 // card controls
 
 function next() {
-    if (!currentCard || currentCard in visitedCards) {
+    if (!currentCard || currentCard in visitedCards || !cardIds.includes(currentCard)) {
         if (lcPointer === lastCards.length - 1) {
             if (cardsToVisit.length) {
                 pickRandomCard();
@@ -370,7 +383,7 @@ function showCurrentCard() {
     hideAllCards();
     controlsElement.removeAttribute('data-level');
 
-    if (currentCard) {
+    if (currentCard && cardIds.includes(currentCard)) {
         document.getElementById(currentCard).classList.add('show');
 
         if (currentCard in visitedCards) {

@@ -5,8 +5,8 @@ const katex = require('katex');
 const options = {
     throwOnError: false,
     macros: {
-        '\\min': '\\text{min}',
-        '\\max': '\\text{max}',
+        // '\\min': '\\text{min}',
+        // '\\max': '\\text{max}',
     }
 };
 
