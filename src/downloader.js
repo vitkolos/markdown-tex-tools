@@ -54,7 +54,7 @@ async function getContent(url, options, success, failure) {
         const badStatusCode = await cacheRead({ type: 'badStatusCode', url, options });
 
         if (badStatusCode) {
-            failure('statusCode', badStatusCode);
+            failure('statusCode', { statusCode: badStatusCode, url });
             return;
         }
     }
@@ -63,7 +63,7 @@ async function getContent(url, options, success, failure) {
         const data = [];
 
         if (res.statusCode != 200) {
-            failure('statusCode', res.statusCode);
+            failure('statusCode', { statusCode: res.statusCode, url });
             cacheWrite({ type: 'badStatusCode', url, options }, res.statusCode);
             return;
         }
