@@ -51,6 +51,10 @@ a:hover {
     color-scheme: dark;
 }
 
+[data-theme="dark"] img {
+    background-color: #ccc;
+}
+
 .toc {
     margin: 0 -1rem;
 }
