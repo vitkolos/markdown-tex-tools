@@ -37,7 +37,9 @@ function initialize() {
     someInitialCalls();
 
     document.addEventListener('keydown', event => {
-        if (currentCard) {
+        if (event.ctrlKey || event.altKey || event.shiftKey || event.metaKey) {
+            // do nothing
+        } else if (currentCard) {
             switch (event.code) {
                 case 'Space':
                 case 'Numpad0':
