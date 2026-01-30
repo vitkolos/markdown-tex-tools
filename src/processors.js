@@ -165,7 +165,7 @@ function cardify(markdown, request) {
                     <button type="button" class="flip" onclick="flip();">rozbalit</button>
                     <button type="button" class="previous" onclick="previous();">předchozí</button>
                     <button type="button" class="next" onclick="next();">další</button>
-                    <button id="progress" class="progress" tabindex="-1"></buttons>
+                    <button id="progress" class="progress" tabindex="-1"></button>
                 </div>
                 <div class="cbottom">
                     <button type="button" class="mark" onclick="mark(1);">1 neumím</button>
