@@ -397,8 +397,8 @@ function showCurrentCard() {
     controlsElement.classList.toggle('first', lcPointer === 0);
     controlsElement.classList.toggle('last', (lcPointer === lastCards.length - 1 && !(currentCard in visitedCards)));
     document.getElementById('welldone').classList.toggle('show', !currentCard && currentRun !== undefined);
-    document.getElementById('progress').textContent = (lcPointer + 1)
-        + '/' + (lastCards.length + cardsToVisit.length);
+    document.getElementById('progress').innerHTML = `${(lcPointer + 1)}/${lastCards.length + cardsToVisit.length}
+    <div class="bar" style="width:${100 * (lcPointer + 1) / (lastCards.length + cardsToVisit.length || 1)}%"></div>`;
 }
 
 function updateStats() {

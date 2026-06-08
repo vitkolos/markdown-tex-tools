@@ -309,6 +309,15 @@ input[type="checkbox"] {
     border-color: transparent;
     font-size: 1rem;
     pointer-events: none;
+    position: relative;
+}
+
+.progress .bar {
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  height: 2px;
+  background: #aaa;
 }
 
 .controls[data-level='1'] .cbottom button:nth-child(1),
